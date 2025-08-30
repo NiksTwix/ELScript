@@ -131,26 +131,26 @@
     <ClCompile Include="ELScript.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Decoder\ALUDecoder.hpp" />
-    <ClInclude Include="Decoder\Decoder.hpp" />
-    <ClInclude Include="Decoder\KeywordDecoder.hpp" />
-    <ClInclude Include="Definitions\CommandsInfo.hpp" />
-    <ClInclude Include="Definitions\Execution.hpp" />
-    <ClInclude Include="Definitions\StringOperations.hpp" />
-    <ClInclude Include="ErrorHandling\ErrorHandler.hpp" />
-    <ClInclude Include="Interpretation\CommandHandlers.hpp" />
-    <ClInclude Include="Interpretation\FunctionTable.hpp" />
-    <ClInclude Include="Interpretation\VirtualMachine.hpp" />
-    <ClInclude Include="Lexer\Lexer.hpp" />
-    <ClInclude Include="Loader\Loader.hpp" />
-    <ClInclude Include="Logger\Logger.hpp" />
-    <ClInclude Include="Postprocessing\Postprocessor.hpp" />
-    <ClInclude Include="Scripting\Interpreter.hpp" />
-    <ClInclude Include="Scripting\Script.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Tests\math.els" />
     <None Include="Tests\test1.els" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Decoder\ALUDecoder.hpp" />
+    <ClInclude Include="Core\Decoder\Decoder.hpp" />
+    <ClInclude Include="Core\Decoder\KeywordDecoder.hpp" />
+    <ClInclude Include="Core\Definitions\CommandsInfo.hpp" />
+    <ClInclude Include="Core\Definitions\Execution.hpp" />
+    <ClInclude Include="Core\Definitions\StringOperations.hpp" />
+    <ClInclude Include="Core\ErrorHandling\ErrorHandler.hpp" />
+    <ClInclude Include="Core\Interpretation\CommandHandlers.hpp" />
+    <ClInclude Include="Core\Interpretation\FunctionTable.hpp" />
+    <ClInclude Include="Core\Interpretation\VirtualMachine.hpp" />
+    <ClInclude Include="Core\Lexer\Lexer.hpp" />
+    <ClInclude Include="Core\Loader\Loader.hpp" />
+    <ClInclude Include="Core\Logger\Logger.hpp" />
+    <ClInclude Include="Core\Postprocessing\Postprocessor.hpp" />
+    <ClInclude Include="Core\Scripting\Interpreter.hpp" />
+    <ClInclude Include="Core\Scripting\Script.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

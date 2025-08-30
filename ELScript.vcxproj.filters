@@ -29,57 +29,57 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Loader\Loader.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Logger\Logger.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Lexer\Lexer.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Definitions\StringOperations.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Definitions\CommandsInfo.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Interpretation\CommandHandlers.hpp">
-      <Filter>Файлы заголовков\Interpretation</Filter>
-    </ClInclude>
-    <ClInclude Include="Interpretation\VirtualMachine.hpp">
-      <Filter>Файлы заголовков\Interpretation</Filter>
-    </ClInclude>
-    <ClInclude Include="Decoder\ALUDecoder.hpp">
-      <Filter>Файлы заголовков\Decoding</Filter>
-    </ClInclude>
-    <ClInclude Include="Decoder\KeywordDecoder.hpp">
-      <Filter>Файлы заголовков\Decoding</Filter>
-    </ClInclude>
-    <ClInclude Include="Decoder\Decoder.hpp">
-      <Filter>Файлы заголовков\Decoding</Filter>
-    </ClInclude>
-    <ClInclude Include="Definitions\Execution.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Postprocessing\Postprocessor.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Scripting\Interpreter.hpp">
-      <Filter>Файлы заголовков\Scripting</Filter>
-    </ClInclude>
-    <ClInclude Include="Scripting\Script.hpp">
-      <Filter>Файлы заголовков\Scripting</Filter>
-    </ClInclude>
-    <ClInclude Include="Interpretation\FunctionTable.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="ErrorHandling\ErrorHandler.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Tests\test1.els" />
     <None Include="Tests\math.els" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Decoder\ALUDecoder.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Decoder\Decoder.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Decoder\KeywordDecoder.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Definitions\CommandsInfo.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Definitions\Execution.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Definitions\StringOperations.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ErrorHandling\ErrorHandler.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Interpretation\CommandHandlers.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Interpretation\FunctionTable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Interpretation\VirtualMachine.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Lexer\Lexer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Loader\Loader.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Logger\Logger.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Postprocessing\Postprocessor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Scripting\Interpreter.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Scripting\Script.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

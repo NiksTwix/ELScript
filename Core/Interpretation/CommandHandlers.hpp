@@ -1,9 +1,9 @@
 #pragma once
-#include <Definitions\Execution.hpp>
-#include <Definitions\StringOperations.hpp>
-#include <Logger\Logger.hpp>
-#include <Interpretation\FunctionTable.hpp>
-#include <ErrorHandling\ErrorHandler.hpp>
+#include "..\Definitions\Execution.hpp"
+#include "..\Definitions\StringOperations.hpp"
+#include "..\Logger\Logger.hpp"
+#include "..\Interpretation\FunctionTable.hpp"
+#include "..\ErrorHandling\ErrorHandler.hpp"
 
 namespace ELScript 
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include <Definitions\CommandsInfo.hpp>
+#include "CommandsInfo.hpp"
 
 
 namespace ELScript 

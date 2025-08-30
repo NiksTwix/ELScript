@@ -1,5 +1,5 @@
 #pragma once
-#include <Definitions\Execution.hpp>
+#include "..\Definitions\Execution.hpp"
 #include <functional>
 /*
 	FunctionTable - это класс-посредник между нативным кодом и ELScript

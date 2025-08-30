@@ -1,6 +1,6 @@
 #pragma once
-#include <Definitions/CommandsInfo.hpp>
-#include <Logger/Logger.hpp>
+#include "..\Definitions/CommandsInfo.hpp"
+#include "..\Logger/Logger.hpp"
 #include "ALUDecoder.hpp"
 
 namespace ELScript 

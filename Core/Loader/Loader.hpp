@@ -1,7 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <fstream>
-#include <Logger\Logger.hpp>
+#include "..\Logger\Logger.hpp"
 
 namespace ELScript 
 {

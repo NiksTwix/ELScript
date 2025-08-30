@@ -1,6 +1,6 @@
 #pragma once
-#include <Definitions\CommandsInfo.hpp>
-#include <Definitions\Execution.hpp>
+#include "..\Definitions\CommandsInfo.hpp"
+#include "..\Definitions\Execution.hpp"
 #include <functional>
 
 namespace ELScript

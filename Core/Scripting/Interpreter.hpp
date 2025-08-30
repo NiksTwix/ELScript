@@ -1,11 +1,11 @@
 #pragma once
-#include <Interpretation/VirtualMachine.hpp>
-#include <Loader/Loader.hpp>
-#include <Lexer/Lexer.hpp>
-#include <Decoder/Decoder.hpp>
-#include <Scripting\Script.hpp>
-#include <Definitions\StringOperations.hpp>
-#include <Postprocessing\Postprocessor.hpp>
+#include "..\Interpretation/VirtualMachine.hpp"
+#include "..\Loader/Loader.hpp"
+#include "..\Lexer/Lexer.hpp"
+#include "..\Decoder/Decoder.hpp"
+#include "..\Scripting\Script.hpp"
+#include "..\Definitions\StringOperations.hpp"
+#include "..\Postprocessing\Postprocessor.hpp"
 
 namespace ELScript 
 {

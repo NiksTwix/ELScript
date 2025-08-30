@@ -1,8 +1,8 @@
 #pragma once
-#include <Definitions\CommandsInfo.hpp>
-#include <Logger\Logger.hpp>
+#include "..\Definitions\CommandsInfo.hpp"
+#include "..\Logger\Logger.hpp"
 #include <unordered_set>
-#include <Decoder\KeywordDecoder.hpp>
+#include "KeywordDecoder.hpp"
 /*
 	Decoder разбивает текст на токены и расшифровывает команды
 */

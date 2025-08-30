@@ -1,6 +1,6 @@
 #pragma once
-#include <Definitions\CommandsInfo.hpp>
-#include <Definitions\StringOperations.hpp>
+#include "..\Definitions\CommandsInfo.hpp"
+#include "..\Definitions\StringOperations.hpp"
 namespace ELScript
 {
 	class Lexer

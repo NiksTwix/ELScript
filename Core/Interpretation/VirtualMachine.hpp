@@ -1,6 +1,6 @@
 #pragma once
-#include <Interpretation\CommandHandlers.hpp>
-#include <Definitions\Execution.hpp>
+#include "CommandHandlers.hpp"
+#include "..\Definitions\Execution.hpp"
 #include <functional>
 
 
