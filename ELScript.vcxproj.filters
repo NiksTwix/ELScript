@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков\Interpretation">
+      <UniqueIdentifier>{2f9289fd-b491-487e-b1a3-545c8938652c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Decoding">
+      <UniqueIdentifier>{d587bedf-793b-4f91-b09a-6da24fc738ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Scripting">
+      <UniqueIdentifier>{a4371724-b12f-4fe4-9435-48ad439e3f2d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ELScript.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Loader\Loader.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\Logger.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Lexer\Lexer.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions\StringOperations.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions\CommandsInfo.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpretation\CommandHandlers.hpp">
+      <Filter>Файлы заголовков\Interpretation</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpretation\VirtualMachine.hpp">
+      <Filter>Файлы заголовков\Interpretation</Filter>
+    </ClInclude>
+    <ClInclude Include="Decoder\ALUDecoder.hpp">
+      <Filter>Файлы заголовков\Decoding</Filter>
+    </ClInclude>
+    <ClInclude Include="Decoder\KeywordDecoder.hpp">
+      <Filter>Файлы заголовков\Decoding</Filter>
+    </ClInclude>
+    <ClInclude Include="Decoder\Decoder.hpp">
+      <Filter>Файлы заголовков\Decoding</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions\Execution.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Postprocessing\Postprocessor.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Scripting\Interpreter.hpp">
+      <Filter>Файлы заголовков\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="Scripting\Script.hpp">
+      <Filter>Файлы заголовков\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpretation\FunctionTable.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorHandling\ErrorHandler.hpp">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tests\test1.els" />
+    <None Include="Tests\math.els" />
+  </ItemGroup>
+</Project>

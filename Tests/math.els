@@ -1,0 +1,9 @@
+//math.els
+
+func print(array)
+{
+	print_value array
+	return 215
+}
+
+

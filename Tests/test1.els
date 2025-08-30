@@ -1,0 +1,33 @@
+//test1.els
+var my_id = get_id();
+print_value my_id;
+
+var math_id = get_id_of("math.els")
+
+if (math_id == -1)
+{
+	print_value "math.els not found"
+}
+ 
+if math_id != -1 
+{
+	print_value "math.els found;";
+	print_value math_id;
+
+	var kaka = 10
+
+
+	var a = []
+
+	op_code
+	{
+		load my_id
+		load a
+		array_push_back
+	}
+	var y = call_script(math_id,"print",a)
+	print_value y
+}
+
+
+
