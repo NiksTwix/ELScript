@@ -1,33 +1,10 @@
-//test1.els
-var my_id = get_id();
-print_value my_id;
-
-var math_id = get_id_of("math.els")
-
-if (math_id == -1)
+func process(delta)
 {
-	print_value "math.els not found"
+	print_value delta
+	return	//почему отсутствие или не возврат значения вызывает ошибку пустого стека, исправить!
 }
- 
-if math_id != -1 
-{
-	print_value "math.els found;";
-	print_value math_id;
 
-	var kaka = 10
-
-
-	var a = []
-
-	op_code
-	{
-		load my_id
-		load a
-		array_push_back
-	}
-	var y = call_script(math_id,"print",a)
-	print_value y
-}
+process(3.14)
 
 
 

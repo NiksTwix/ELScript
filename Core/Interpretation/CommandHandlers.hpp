@@ -499,7 +499,7 @@ namespace ELScript
         }
 
         static void H_RET(Command& command, ExecutionChain& chain) {
-            chain.current_rip = chain.call_stack.top();
+            chain.current_rip = chain.call_stack.top() + 1; // +1 так как надо перейти на следующую инструкцию
             chain.call_stack.pop();
             chain.depth_call_stack.pop();
              // SUCCESS, а не RIP_INC_FREEZE, так как нам надо перейти на следующую после CALL инструкцию, иначе ошибка переполнения стека
