@@ -143,16 +143,17 @@ namespace ELScript
             processed_files.clear();
             auto tokens = GetTokens(script_path);
 
-            auto commands = Decoder::Get().DecodeTokens(tokens);
-            Postprocessor::CalculateJMPs(commands);
+            auto raw_ec = Decoder::Get().DecodeTokens(tokens);
+            Postprocessor::CalculateJMPs(raw_ec.commands);
 
             auto id = next_id++;
             scripts[id] = std::make_shared<Script>();
             scripts[id]->execution_chain.id = id;
             scripts[id]->name = script_path.filename().string();
             scripts[id]->scriptPath = script_path;
-            scripts[id]->execution_chain.function_markers = Postprocessor::GetFunctionTable(commands);
-            scripts[id]->execution_chain.commands = commands;
+            scripts[id]->execution_chain.function_markers = Postprocessor::GetFunctionTable(raw_ec.commands);
+            scripts[id]->execution_chain.commands = raw_ec.commands;
+            scripts[id]->execution_chain.exit_rip = raw_ec.exit_rip;
             return id;
         }
 
@@ -206,7 +207,7 @@ namespace ELScript
             {
                 script_->execution_chain.stack.push(parameters[i]); //Да-да, нарушение инкапсуляции, но у нас Interpreter - это божественный класс, он всё должен видеть, но не всё контролировать
             }
-            script_->execution_chain.call_stack.push(script_->execution_chain.current_rip);
+            script_->execution_chain.call_stack.push(script_->execution_chain.exit_rip - 1);
             script_->execution_chain.depth_call_stack.push(script_->execution_chain.variables.size() - 1);
 
             machine.ExecuteFrom(script_->execution_chain, script_->execution_chain.function_markers[function_name].start_rip);

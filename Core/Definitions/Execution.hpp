@@ -38,6 +38,7 @@ namespace ELScript
 		std::stack<int> depth_call_stack;
 		ECState state;
 		int current_rip = 0;
+		int exit_rip = 0;
 		ECID id = InvalidECID;
 	public:
 		

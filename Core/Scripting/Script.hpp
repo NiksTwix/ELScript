@@ -4,8 +4,6 @@
 
 namespace ELScript 
 {
-
-
 	struct Script 
 	{
 		std::string name;

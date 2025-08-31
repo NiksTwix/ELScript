@@ -1,10 +1,17 @@
 func process(delta)
 {
 	print_value delta
-	return	//почему отсутствие или не возврат значения вызывает ошибку пустого стека, исправить!
+	return delta
 }
 
-process(3.14)
+for j (0,120,2)
+{
+
+var x = process(j)
+print_value x
+}
+
+
 
 
 

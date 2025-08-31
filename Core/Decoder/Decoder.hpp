@@ -8,6 +8,13 @@
 */
 namespace ELScript
 {
+
+	struct RawEC //Raw Execution Chain
+	{
+		int exit_rip;
+		std::vector<Command> commands;
+	};
+
 	class Decoder
 	{
 	private:
@@ -145,7 +152,7 @@ namespace ELScript
 			return lexer;
 		}
 
-		std::vector<Command> DecodeTokens(std::vector<Token>& tokens)
+		RawEC DecodeTokens(std::vector<Token>& tokens)
 		{
 			kwDecoder.ClearState();
 			CommandNode nd = BuildCommandTree(tokens);
@@ -153,9 +160,12 @@ namespace ELScript
 			auto cd = kwDecoder.BuildExecutionChain(nd);
 			cd.push_back(Command(OpCode::EXIT));
 
+			RawEC result;
+			result.exit_rip = cd.size() - 1;
 			auto f = kwDecoder.GetFunctionsSection();
 			cd.insert(cd.end(), f.begin(), f.end());
-			return cd;
+			result.commands = cd;
+			return result;
 		}
 
 	};

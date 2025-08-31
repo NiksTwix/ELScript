@@ -66,7 +66,7 @@ namespace ELScript
 				{
 					if (current_echain != nullptr && current_echain->GetID() == message.script) 
 					{
-						Logger::Get().Log(message.description);
+						Logger::Get().Log(message.description + " RIP: " + std::to_string(message.rip));
 						error_catch = true;
 					}
 				});
@@ -96,17 +96,17 @@ namespace ELScript
 					break;
 				}
 				chain.current_rip = rip;
+				
 				ProcessCommand(chain);
-				// Проверяем, изменился ли rip внутри ProcessCommand
-
 				if (error_catch) 
 				{
 					chain.state = ECState::ERROR;
 					break;
 				}
-				if (chain.current_rip != rip)
+				if (chain.current_rip != rip)// Проверяем, изменился ли rip внутри ProcessCommand
 				{
 					rip = chain.current_rip;
+					rip++;
 					continue;
 				}
 				rip++;
