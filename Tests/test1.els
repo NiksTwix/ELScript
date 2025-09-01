@@ -1,5 +1,37 @@
-var x = meta:test * 2
-print_value x
+
+var dick = "уси"
+
+var x = ["key":true,"key2":29*45, "tyr":dick]
+
+
+var z = x["key"]
+
+var j = x["key2"]
+print_value j
+x["key2"] = 516
+j = x["key2"]
+print_value z
+print_value j
+j = x["tyr"]
+print_value j
+x = ["test1", "test2", 600*345/5*2]
+
+var size = 0;
+
+op_code 
+{ 
+load x
+array_size
+store size
+}
+
+for i (0,size)
+{
+	var h = x[i];
+	print_value h
+}
+
+
 
 
 

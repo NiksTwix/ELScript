@@ -8,7 +8,7 @@
 namespace ELScript
 {
     constexpr int MaxCallStackDepth = 65535;
-    enum ValueType {VOID, NUMBER, STRING, BOOL, ARRAY};
+    enum ValueType {VOID, NUMBER, STRING, BOOL, ARRAY, DICT};
 
     struct Value {
         ValueType type;
@@ -19,6 +19,7 @@ namespace ELScript
         };
         std::string strVal;   // Для строк 
         std::shared_ptr<std::vector<Value>> arrayVal; // Для массивов
+        std::shared_ptr<std::unordered_map<std::string,Value>> dictVal; // Для массивов
         // Конструкторы
         Value() : type(ValueType::VOID), numberVal(0) {  } 
 
@@ -36,7 +37,7 @@ namespace ELScript
         }
 
         Value(std::shared_ptr<std::vector<Value>> arr) : type(ValueType::ARRAY), arrayVal(arr) {}
-
+        Value(std::shared_ptr<std::unordered_map<std::string, Value>> map) : type(ValueType::DICT), dictVal(map) {}
         // ПРАВИЛО ПЯТИ (очень важно!)
         // Конструктор копирования
         Value(const Value& other) : type(other.type) {
@@ -45,6 +46,7 @@ namespace ELScript
             case ValueType::BOOL:   boolVal = other.boolVal; break;
             case ValueType::STRING: new (&strVal) std::string(other.strVal); break; // Копируем строку
             case ValueType::ARRAY:  arrayVal = other.arrayVal; break; // Копируем shared_ptr
+            case ValueType::DICT:  dictVal = other.dictVal; break; // Копируем shared_ptr
             case ValueType::VOID:   break; // Ничего не делаем
             }
         }
@@ -61,6 +63,7 @@ namespace ELScript
             case ValueType::BOOL:   boolVal = other.boolVal; break;
             case ValueType::STRING: new (&strVal) std::string(other.strVal); break;
             case ValueType::ARRAY:  arrayVal = other.arrayVal; break;
+            case ValueType::DICT:  dictVal = other.dictVal; break;
             case ValueType::VOID:   break;
             }
             return *this;
@@ -71,6 +74,7 @@ namespace ELScript
             case ValueType::BOOL:   boolVal = other.boolVal; break;
             case ValueType::STRING: new (&strVal) std::string(std::move(other.strVal)); break;
             case ValueType::ARRAY:  arrayVal = std::move(other.arrayVal); break; // Важно: перемещаем shared_ptr
+            case ValueType::DICT:  dictVal = std::move(other.dictVal); break;
             case ValueType::VOID:   break;
             }
             // После перемещения нужно привести исходный объект в безопасное состояние!
@@ -87,6 +91,7 @@ namespace ELScript
                 case ValueType::BOOL:   boolVal = other.boolVal; break;
                 case ValueType::STRING: new (&strVal) std::string(std::move(other.strVal)); break;
                 case ValueType::ARRAY:  arrayVal = std::move(other.arrayVal); break;
+                case ValueType::DICT:  dictVal = std::move(other.dictVal); break;
                 case ValueType::VOID:   break;
                 }
                 other.type = ValueType::VOID;
@@ -111,6 +116,12 @@ namespace ELScript
                 for (auto l : *arrayVal)
                 {
                     result += l.ToString() + " ";
+                }
+                return result;
+            case ELScript::DICT:
+                for (auto l : *dictVal)
+                {
+                    result += l.first + ":" + l.second.ToString() + " ";
                 }
                 return result;
             default:
@@ -214,13 +225,19 @@ namespace ELScript
         CONVERT_TYPE,        //конвертация значения в number,string,bool
 
         //Работа с массивами
-        GET_INDEX,
-        SET_INDEX,
+        ARRAY_MAKE,
+        GET_BY,
+        SET_BY,
         ARRAY_PUSH_BACK,
         ARRAY_POP_BACK,
         ARRAY_INSERT_INDEX,
         ARRAY_ERASE_INDEX,
-        ARRAY_SIZE
+        ARRAY_SIZE,
+
+        //Работа с хеш-картой
+        DICT_MAKE,
+        DICT_SIZE,
+        DICT_ERASE,
     };
     
     struct Command 
@@ -336,13 +353,15 @@ namespace ELScript
                 {"scopeend", OpCode::SCOPEEND},
 
                 {"convert_type", OpCode::CONVERT_TYPE},
-                {"get_index", OpCode::GET_INDEX},
-                {"set_index", OpCode::SET_INDEX},
+                {"get_by", OpCode::GET_BY},
+                {"set_by", OpCode::SET_BY},
                 {"array_push_back", OpCode::ARRAY_PUSH_BACK},
                 {"array_pop_back", OpCode::ARRAY_POP_BACK},
                 {"array_insert_index", OpCode::ARRAY_INSERT_INDEX},
                 {"array_erase_index", OpCode::ARRAY_ERASE_INDEX},
                 {"array_size", OpCode::ARRAY_SIZE},
+                {"dict_size", OpCode::DICT_SIZE},
+                {"dict_erase", OpCode::DICT_ERASE},
             };
             return opcodeMap;
         }

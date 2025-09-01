@@ -557,60 +557,108 @@ namespace ELScript
             
         }
 
-        static void H_GET_INDEX(Command& command, ExecutionChain& chain) {
+        static void H_GET_BY(Command& command, ExecutionChain& chain) {
             if (chain.stack.size() < 2) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_INDEX: stack underflow."));
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: stack underflow."));
                 return;
             }
             Value array = GetStackTop(chain);
             Value index = GetStackTop(chain);
 
-            if (array.type != ValueType::ARRAY) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_INDEX: indexing is only possible in an array."));
+            if (array.type != ValueType::ARRAY && array.type != ValueType::DICT) {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: indexing is only possible in array or dict."));
                 return;
             }
-            if (index.type != ValueType::NUMBER) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_INDEX: index must be a number."));
-                return;
-            }
-            int idx = static_cast<int>(index.numberVal);
+            if (array.type == ValueType::ARRAY) 
+            {
+                if (index.type != ValueType::NUMBER) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: index must be a number."));
+                    return;
+                }
+                int idx = static_cast<int>(index.numberVal);
 
-            // Проверяем границы
-            if (idx < 0 || idx >= array.arrayVal->size()) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_INDEX: array index out of bounds. Index: " + std::to_string(idx) + ", Size: " + std::to_string(array.arrayVal->size())));
-                return;
+                // Проверяем границы
+                if (idx < 0 || idx >= array.arrayVal->size()) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: array index out of bounds. Index: " + std::to_string(idx) + ", Size: " + std::to_string(array.arrayVal->size())));
+                    return;
+                }
+                chain.stack.push(array.arrayVal->at(idx));
             }
-            chain.stack.push(array.arrayVal->at(idx));
-            
+            else
+            {
+                if (index.type != ValueType::STRING) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: key must be a string."));
+                    return;
+                }
+                // Проверяем границы
+                if (!array.dictVal->count(index.strVal)) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] GET_BY: invalid key. Key: " + index.strVal + "."));
+                    return;
+                }
+                chain.stack.push(array.dictVal->at(index.strVal));
+            }
         }
 
-        static void H_SET_INDEX(Command& command, ExecutionChain& chain) {
+        static void H_SET_BY(Command& command, ExecutionChain& chain) {
             if (chain.stack.size() < 3) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_INDEX: stack underflow."));
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: stack underflow."));
                 return;
             }
             Value array = GetStackTop(chain);
             Value index = GetStackTop(chain);
             Value value = GetStackTop(chain);
-            if (array.type != ValueType::ARRAY) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_INDEX: indexing is only possible in an array."));
+            if (array.type != ValueType::ARRAY && array.type != ValueType::DICT) {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: indexing is only possible in array or dict."));
                 return;
             }
-            if (index.type != ValueType::NUMBER) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_INDEX: index must be a number."));
-                return;
-            }
-            int idx = static_cast<int>(index.numberVal);
+            if (array.type == ValueType::ARRAY)
+            {
+                if (index.type != ValueType::NUMBER) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: index must be a number."));
+                    return;
+                }
+                int idx = static_cast<int>(index.numberVal);
 
-            // Проверяем границы
-            if (idx < 0 || idx >= array.arrayVal->size()) {
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_INDEX: array index out of bounds. Index: " + std::to_string(idx) + ", Size: " + std::to_string(array.arrayVal->size())));
-                return;
+                // Проверяем границы
+                if (idx < 0 || idx >= array.arrayVal->size()) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: array index out of bounds. Index: " + std::to_string(idx) + ", Size: " + std::to_string(array.arrayVal->size())));
+                    return;
+                }
+                (*array.arrayVal.get())[idx] = value;
             }
-            (*array.arrayVal.get())[idx] = value;
-            
+            else
+            {
+                if (index.type != ValueType::STRING) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: key must be a string."));
+                    return;
+                }
+                // Проверяем границы
+                if (!array.dictVal->count(index.strVal)) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SET_BY: invalid key. Key: " + index.strVal + "."));
+                    return;
+                }
+                (*array.dictVal.get())[index.strVal] = value;
+            }
         }
+        static void H_ARRAY_MAKE(Command& command, ExecutionChain& chain)
+        {
+            int count = command.operand.numberVal;
 
+            if (chain.stack.size() < count)
+            {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] ARRAY_MAKE: stack underflow."));
+                return;
+            }
+            std::vector<Value> temp;
+            for (int i = 0; i < count; i++)
+            {
+                auto value = GetStackTop(chain);
+                temp.push_back(value);
+            }
+
+            chain.stack.push(Value(std::make_shared<std::vector<Value>>(temp)));
+
+        }
         static void H_ARRAY_OPERATIONS(Command& command, ExecutionChain& chain) {
             Value array = GetStackTop(chain);
 
@@ -666,6 +714,58 @@ namespace ELScript
                 break;
             }
             
+        }
+        static void H_DICT_MAKE(Command& command, ExecutionChain& chain) 
+        {
+            int count = command.operand.numberVal;
+
+            if (chain.stack.size() < count * 2) 
+            {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] DICT_MAKE: stack underflow."));
+                return;
+            }
+            std::unordered_map<std::string, Value> temp;
+            for (int i = 0; i < count; i++)
+            {
+                auto value = GetStackTop(chain);
+                auto key = GetStackTop(chain);
+                if (key.type != ValueType::STRING)
+                {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] DICT_MAKE: key must be string."));
+                    return;
+                }
+                temp.insert({ key.strVal, value });
+            }
+
+            chain.stack.push(Value(std::make_shared<std::unordered_map<std::string, Value>>(temp)));
+
+        }
+        static void H_DICT_OPERATIONS(Command& command, ExecutionChain& chain) {
+            Value dict = GetStackTop(chain);
+
+            if (dict.type != ValueType::DICT || dict.dictVal == nullptr) {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] DICT_OPERATIONS: invalid dictionary."));
+                return;
+            }
+            Value key;
+            Value value;
+            switch (command.code) {
+            case OpCode::DICT_ERASE:
+                if (chain.stack.size() < 1) { // 2 так как dict уже вытащили, а 1 - это ключ
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] DICT_ERASE: stack underflow."));
+                    return;
+                }
+                key = GetStackTop(chain);
+                if (!dict.dictVal->count(key.strVal)) {
+                    ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] DICT_ERASE: invalid key."));
+                    return;
+                }
+                dict.dictVal->erase(key.strVal);
+                break;
+            case OpCode::DICT_SIZE:
+                chain.stack.push((int)dict.dictVal->size());
+                break;
+            }
         }
 	};
 }

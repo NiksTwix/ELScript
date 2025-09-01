@@ -146,6 +146,7 @@ namespace ELScript
 		Token InsertOpEnd(std::vector<Token>& tokens, int current_index, const std::string& text)
 		{
 			if (tokens.size() == 0)return Token(TokenType::NOP);
+			if (text[current_index] == ';')return Token(TokenType::OP_END, "#op_end", current_line, current_depth);
 			if (tokens.back().type == TokenType::OP_END || tokens.back().value.strVal == "{" && undefined_token.empty()) return Token(TokenType::NOP);
 
 			if (tokens.back().type != TokenType::OP_END && tokens.back().value.strVal != "}" && text[current_index] == '}')
@@ -158,7 +159,7 @@ namespace ELScript
 				return Token(TokenType::OP_END, "#op_end", current_line, current_depth);
 			}
 
-			if (text[current_index] == ';')return Token(TokenType::OP_END, "#op_end", current_line, current_depth);
+			
 		}
 
 	public:

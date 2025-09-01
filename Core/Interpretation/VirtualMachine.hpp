@@ -41,9 +41,12 @@ namespace ELScript
 			else if (command.code == OpCode::CALL)		CommandHandlers::H_CALL(command, chain);
 			else if (command.code == OpCode::RET)		CommandHandlers::H_RET(command, chain);
 			else if (command.code == OpCode::CONVERT_TYPE)		CommandHandlers::H_CONVERT_TYPE(command, chain);
-			else if (command.code == OpCode::GET_INDEX)			CommandHandlers::H_GET_INDEX(command, chain);
-			else if (command.code == OpCode::SET_INDEX)			CommandHandlers::H_SET_INDEX(command, chain);
+			else if (command.code == OpCode::GET_BY)			CommandHandlers::H_GET_BY(command, chain);
+			else if (command.code == OpCode::SET_BY)			CommandHandlers::H_SET_BY(command, chain);
+			else if (command.code == OpCode::ARRAY_MAKE)			CommandHandlers::H_ARRAY_MAKE(command, chain);
+			else if (command.code == OpCode::DICT_MAKE)			CommandHandlers::H_DICT_MAKE(command, chain);
 			else if (command.code == OpCode::ARRAY_SIZE || command.code == OpCode::ARRAY_POP_BACK || command.code == OpCode::ARRAY_PUSH_BACK || command.code == OpCode::ARRAY_INSERT_INDEX || command.code == OpCode::ARRAY_ERASE_INDEX)  CommandHandlers::H_ARRAY_OPERATIONS(command, chain);
+			else if (command.code == OpCode::DICT_SIZE || command.code == OpCode::DICT_ERASE)  CommandHandlers::H_DICT_OPERATIONS(command, chain);
 			else if (command.code == OpCode::SCOPESTR)
 			{
 				chain.variables.push_back({});

@@ -1,6 +1,6 @@
 ﻿#include <iostream>
-
 #include <Core/Scripting/Interpreter.hpp>
+
 
 int main()
 {

@@ -143,13 +143,175 @@ namespace ELScript
 				return false;
 			}
 
+			void ParseIndexAssign(std::vector<Token>& tokens, size_t& i, std::vector<Command>& commands) 
+			{
+				Token t = tokens[i];
+				std::string arrayName = t.value.strVal;
+				Token assignOp;
+				int assign_index = -1;
+				for (int j = i; j < tokens.size(); j++)
+				{
+					if (IsAssignOperator(tokens[j]))
+					{
+						assignOp = tokens[j];
+						assign_index = j;
+					}
+				}
+				// Пропускаем имя, оператор присваивания и '['
+				// Собираем выражение индекса (аналогично чтению)
+				std::vector<Token> indexExpr;
+				int bracketDepth = 0;
+
+				while (i < tokens.size()) {
+					if (tokens[i].value.strVal == "[") bracketDepth++;
+					else if (tokens[i].value.strVal == "]") bracketDepth--;
+					else if (bracketDepth > 0) {
+						indexExpr.push_back(tokens[i]);
+					}
+					if (IsAssignOperator(tokens[i]))
+					{
+						break;
+					}
+					i++;
+				}
+				// i теперь на токене после ']'
+
+				// Собираем выражение правой части (значение)
+				std::vector<Token> rightExpr;
+
+				while (i < tokens.size()) {
+					rightExpr.push_back(tokens[i]);
+					i++;
+				}
+
+				auto indexCommands = ExpressionHandler(indexExpr);
+				auto valueCommands = ExpressionHandler(rightExpr);
+
+				// Генерируем код для присваивания по индексу:
+				// 1. Вычисляем значение (правая часть)
+				commands.insert(commands.end(), valueCommands.begin(), valueCommands.end());
+				// 2. Вычисляем индекс
+				commands.insert(commands.end(), indexCommands.begin(), indexCommands.end());
+				// 3. Загружаем массив
+				commands.push_back(Command(OpCode::LOAD, arrayName, t.line));
+				// 4. Присваиваем: stack -> [value, index, array] -> (ничего)
+				commands.push_back(Command(OpCode::SET_BY, assignOp.value.strVal, t.line)); // Передаём оператор для составных += и т.д.
+
+			}
+			
+			std::shared_ptr<std::unordered_map<std::string, Value>> ParseDict(std::vector<Token>& tokens, size_t& i, size_t line) {
+				std::unordered_map<std::string, Value> dict;
+				return std::make_shared<std::unordered_map<std::string, Value>>(dict);
+			}
+			std::vector<Command> ParseArray(std::vector<Token>& tokens, size_t& i, size_t line) {
+				std::vector<std::vector<Token>> expressions;
+				i++; //Скипаем [
+
+				std::vector<Token> temp_tokens;
+
+				std::vector<Command> commands;
+
+				for (; i < tokens.size(); i++) 
+				{
+					Token& t = tokens[i];
+
+					if (t.value.strVal == ",") 
+					{
+						expressions.push_back(temp_tokens);
+						temp_tokens.clear();
+						continue;
+					}
+					if (t.value.strVal == "]") 
+					{
+						expressions.push_back(temp_tokens);
+						temp_tokens.clear();
+						break;
+					}
+					temp_tokens.push_back(t);
+				}
+
+				for (int j = expressions.size() - 1; j >= 0; j--) 
+				{
+					auto commands_ = ExpressionHandler(expressions[j]);
+					commands.insert(commands.end(), commands_.begin(), commands_.end());
+				}
+				commands.push_back(Command(OpCode::ARRAY_MAKE, (int)expressions.size()));
+				return commands;
+			}
+
+			std::vector<Command> ParseDictionary(std::vector<Token>& tokens, size_t& i, size_t line) {
+				std::vector<Command> commands;
+				i++; // Пропускаем '['
+
+				std::vector<std::pair<std::vector<Token>, std::vector<Token>>> pairs; // пары [ключ, значение]
+
+				// Парсим пары ключ:значение
+				while (i < tokens.size() && tokens[i].value.strVal != "]") {
+					// Парсим ключ (до двоеточия)
+					std::vector<Token> key_tokens;
+					while (i < tokens.size() && tokens[i].value.strVal != ":") {
+						key_tokens.push_back(tokens[i]);
+						i++;
+					}
+
+					if (i >= tokens.size()) throw std::runtime_error("Expected ':'");
+					i++; // Пропускаем ':'
+
+					// Парсим значение (до запятой или ])
+					std::vector<Token> value_tokens;
+					while (i < tokens.size() && tokens[i].value.strVal != "," && tokens[i].value.strVal != "]") {
+						value_tokens.push_back(tokens[i]);
+						i++;
+					}
+
+					pairs.push_back({ key_tokens, value_tokens });
+
+					if (i < tokens.size() && tokens[i].value.strVal == ",") {
+						i++; // Пропускаем ','
+					}
+				}
+
+				if (i >= tokens.size() || tokens[i].value.strVal != "]") {
+					throw std::runtime_error("Expected ']'");
+				}
+				i++; // Пропускаем ']'
+
+				// Генерируем код в обратном порядке
+				for (auto it = pairs.rbegin(); it != pairs.rend(); ++it) {
+					// Ключ
+					auto key_cmds = ExpressionHandler(it->first);
+					commands.insert(commands.end(), key_cmds.begin(), key_cmds.end());
+					// Значение
+					auto value_cmds = ExpressionHandler(it->second);
+					commands.insert(commands.end(), value_cmds.begin(), value_cmds.end());
+
+					
+				}
+
+				commands.push_back(Command(OpCode::DICT_MAKE, Value((int)pairs.size()), line));
+				return commands;
+			}
+			bool IsLikelyDictionary(std::vector<Token>& tokens, size_t start_index) {
+				size_t j = start_index;
+				while (j < tokens.size() && tokens[j].value.strVal != "]") {
+					// Если находим двоеточие ':' — это скорее всего словарь
+					if (tokens[j].value.strVal == ":") {
+						return true;
+					}
+					// Если находим запятую до любого двоеточия — это скорее массив
+					if (tokens[j].value.strVal == ",") {
+						return false;
+					}
+					j++;
+				}
+				return false;
+			}
 	public:
 		std::vector<Command> ExpressionHandler(std::vector<Token> tokens) {
 			std::vector<Command> commands;
 			std::stack<Token> operatorStack;
 
-			std::vector<Value> array_of_values;
-			bool array_mode = false;
+			
 
 			for (size_t i = 0; i < tokens.size(); i++) {
 				Token& t = tokens[i];
@@ -158,61 +320,8 @@ namespace ELScript
 				if (t.type == TokenType::IDENTIFIER && IsArrayAssign(tokens,i)) 
 				{
 					// Это присваивание элементу массива! a[index] = value
-					std::string arrayName = t.value.strVal;
-					Token assignOp;
-					int assign_index = -1;
-					for (int j = i; j < tokens.size(); j++)
-					{
-						if (IsAssignOperator(tokens[j]))
-						{
-							assignOp = tokens[j];
-							assign_index = j;
-						}
-					}
-					// Пропускаем имя, оператор присваивания и '['
-					
-
-					// Собираем выражение индекса (аналогично чтению)
-					std::vector<Token> indexExpr;
-					int bracketDepth = 0;
-
-					while (i < tokens.size()) {
-						if (tokens[i].value.strVal == "[") bracketDepth++;
-						else if (tokens[i].value.strVal == "]") bracketDepth--;
-						else if (bracketDepth > 0){
-							indexExpr.push_back(tokens[i]);
-						}
-						if (IsAssignOperator(tokens[i]))
-						{
-							break;
-						}
-						i++;
-					}
-					// i теперь на токене после ']'
-
-					// Собираем выражение правой части (значение)
-					std::vector<Token> rightExpr;
-
-					while (i < tokens.size()) {
-						rightExpr.push_back(tokens[i]);
-						i++;
-					}
-
-					auto indexCommands = ExpressionHandler(indexExpr);
-					auto valueCommands = ExpressionHandler(rightExpr);
-
-					// Генерируем код для присваивания по индексу:
-					// 1. Вычисляем значение (правая часть)
-					commands.insert(commands.end(), valueCommands.begin(), valueCommands.end());
-					// 2. Вычисляем индекс
-					commands.insert(commands.end(), indexCommands.begin(), indexCommands.end());
-					// 3. Загружаем массив
-					commands.push_back(Command(OpCode::LOAD, arrayName, t.line));
-					// 4. Присваиваем: stack -> [value, index, array] -> (ничего)
-					commands.push_back(Command(OpCode::SET_INDEX, assignOp.value.strVal, t.line)); // Передаём оператор для составных += и т.д.
-
+					ParseIndexAssign(tokens, i, commands);		//Для словаря тоже работает, ну для обращений по индексу или ключу
 					continue;
-
 				}
 
 				// Обработка присваивания
@@ -231,7 +340,7 @@ namespace ELScript
 				}
 				else if (t.type == TokenType::IDENTIFIER) {
 
-					if (i + 1 < tokens.size() && tokens[i + 1].value.strVal == "[") 
+					if (i + 1 < tokens.size() && tokens[i + 1].value.strVal == "[") //работает и для словарей
 					{
 						std::string arrayName = t.value.strVal;
 						i += 2;// Пропускаем имя массива и открывающую скобку [
@@ -251,10 +360,11 @@ namespace ELScript
 						// Рекурсивно обрабатываем выражение индекса
 						auto indexCommands = ExpressionHandler(indexExpr);
 						// Генерируем код:
+
 						commands.insert(commands.end(), indexCommands.begin(), indexCommands.end()); // Вычисляем индекс, кладём на стек
 						commands.push_back(Command(OpCode::LOAD, arrayName, t.line)); // Загружаем массив (или его адрес)
-						commands.push_back(Command(OpCode::GET_INDEX, Value(), t.line)); // GET_INDEX: stack -> [array, index] -> value
 
+						commands.push_back(Command(OpCode::GET_BY, Value(), t.line)); // GET_INDEX: stack -> [array, index] -> value
 						continue;
 					}
 
@@ -310,8 +420,7 @@ namespace ELScript
 				}
 				// Литералы
 				if (t.type == TokenType::LITERAL) {
-					if (!array_mode)commands.push_back(Command(OpCode::PUSH, t.value, t.line));
-					else array_of_values.push_back(t.value);
+					commands.push_back(Command(OpCode::PUSH, t.value, t.line));
 				}
 				// Операторы
 				else if (t.type == TokenType::OPERATOR) {
@@ -333,16 +442,19 @@ namespace ELScript
 					else if (t.value.strVal == ")") {
 						ProcessParenthesis(operatorStack, commands);
 					}
-					else if (t.value.strVal == "[") 
+					else if (t.value.strVal == "[")
 					{
-						array_mode = true;
-					}
-					else if (t.value.strVal == "]")
-					{
-						array_mode = false;
-						auto v = Value(std::make_shared<std::vector<Value>>(array_of_values));
-						commands.push_back(Command(OpCode::PUSH, v, t.line));
-						array_of_values.clear();
+						bool is_dict = IsLikelyDictionary(tokens, i + 1);
+
+						std::vector<Command> commands1;
+						if (is_dict) {
+							commands1 = ParseDictionary(tokens, i, t.line);
+						}
+						else {
+							commands1 = ParseArray(tokens, i, t.line);
+						}
+
+						commands.insert(commands.end(), commands1.begin(), commands1.end());
 					}
 				}
 				else if (t.type == TokenType::KEYWORD) 
