@@ -191,7 +191,7 @@ namespace ELScript
         //Variables
         STORE,
         LOAD,
-        
+        LOADM,  //LOAD META
         //IF A- Absolute, R-relative
         JMPA,
         JMPR,

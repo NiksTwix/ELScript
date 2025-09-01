@@ -22,6 +22,7 @@ namespace ELScript
 			else if (command.code == OpCode::MOD)		CommandHandlers::H_MOD(command, chain);
 			else if (command.code == OpCode::PRINT)		CommandHandlers::H_PRINT(command, chain);
 			else if (command.code == OpCode::LOAD)		CommandHandlers::H_LOAD(command, chain);
+			else if (command.code == OpCode::LOADM)		CommandHandlers::H_LOADM(command, chain);
 			else if (command.code == OpCode::STORE)		CommandHandlers::H_STORE(command, chain);
 			else if (command.code == OpCode::DECLARE)	CommandHandlers::H_DECLARE(command, chain);
 			else if (command.code == OpCode::DECLARED)	CommandHandlers::H_DECLARED(command, chain);

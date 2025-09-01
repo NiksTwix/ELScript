@@ -176,7 +176,20 @@ namespace ELScript
 			chain.stack.push(val); // Кладём копию значения
 			
 		}
+        static void H_LOADM(Command& command, ExecutionChain& chain)
+        {       
+            if (!chain.meta_variables.count(command.operand.strVal)) {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] LOADM: undefined meta variable " + command.operand.strVal + "."));
+                return;
+            }
+            Value val = chain.meta_variables[command.operand.strVal];
 
+            if (val.type == ValueType::VOID) {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] LOADM: meta variable with type VOID " + command.operand.strVal + "."));
+                return;
+            }
+            chain.stack.push(val); // Кладём копию значения
+        }
 		static void H_STORE(Command& command, ExecutionChain& chain) {
 			if (chain.stack.empty()) {
 				ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] STORE: stack underflow."));

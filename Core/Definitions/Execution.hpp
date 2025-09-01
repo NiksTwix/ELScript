@@ -32,6 +32,7 @@ namespace ELScript
 	private:	
 		std::stack<Value> stack;
 		std::vector<std::unordered_map<std::string, Value>> variables = { {} };
+		std::unordered_map<std::string, Value> meta_variables;
 		std::vector<Command> commands;
 		std::unordered_map<std::string, FunctionData> function_markers;
 		std::stack<int> call_stack; //rip

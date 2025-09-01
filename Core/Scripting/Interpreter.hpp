@@ -222,5 +222,29 @@ namespace ELScript
             }
             return Value();
         }
+
+        void SetMetaVariable(ECID script, std::string name, Value value) 
+        {
+            auto script_ = GetScript(script);
+            if (!script_) {
+                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                return;
+            }
+            script_->execution_chain.meta_variables[name] = value;
+        }
+        Value GetMetaVariable(ECID script, std::string name) 
+        {
+            auto script_ = GetScript(script);
+            if (!script_) {
+                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                return Value();
+            }
+            if (!script_->execution_chain.meta_variables.count(name)) 
+            {
+                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: meta variable " + name + " isnt defined."));
+                return Value();
+            }
+            return script_->execution_chain.meta_variables[name];
+        }
 	};
-}
+} 

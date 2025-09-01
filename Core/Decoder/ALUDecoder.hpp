@@ -1,5 +1,6 @@
 #pragma once
 #include "..\Definitions\CommandsInfo.hpp"
+#include "..\ErrorHandling\ErrorHandler.hpp"
 
 namespace ELScript
 {
@@ -344,7 +345,22 @@ namespace ELScript
 						array_of_values.clear();
 					}
 				}
-
+				else if (t.type == TokenType::KEYWORD) 
+				{
+					if (t.value.strVal == "meta")
+					{
+						if (i < tokens.size() - 2 && tokens[i + 1].value.strVal == ":" && tokens[i + 2].type == TokenType::IDENTIFIER) 
+						{
+							commands.push_back(Command(OpCode::LOADM, tokens[i + 2].value, t.line));
+							i += 2;
+						}
+						else 
+						{
+							ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[ALUDecoder] invalid meta variable."));
+						}
+					}
+					
+				}
 			}
 			while (!operatorStack.empty()) {
 				Token top = operatorStack.top();

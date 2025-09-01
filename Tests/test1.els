@@ -1,15 +1,5 @@
-func process(delta)
-{
-	print_value delta
-	return delta
-}
-
-for j (0,120,2)
-{
-
-var x = process(j)
+var x = meta:test * 2
 print_value x
-}
 
 
 

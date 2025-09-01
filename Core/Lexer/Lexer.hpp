@@ -35,6 +35,7 @@ namespace ELScript
 			{"}", TokenType::DELIMITER},
 			{"[", TokenType::DELIMITER},
 			{"]", TokenType::DELIMITER},
+			{":", TokenType::DELIMITER},
 			{",", TokenType::DELIMITER},
 			{";",TokenType::DELIMITER},
 			{"bool", TokenType::TYPE_MARKER},
@@ -50,7 +51,8 @@ namespace ELScript
 			{"func", TokenType::KEYWORD},
 			{"return", TokenType::KEYWORD},
 			{"op_code",TokenType::KEYWORD},
-			{"import",TokenType::KEYWORD}
+			{"import",TokenType::KEYWORD},
+			{"meta",TokenType::KEYWORD},
 		};
 		std::string undefined_token = std::string();
 		int current_line = 0;
