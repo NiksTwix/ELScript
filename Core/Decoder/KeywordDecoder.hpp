@@ -21,7 +21,7 @@ namespace ELScript
 				{
 					chain.push_back(Command(OpCodeMap::GetStringOpCode(child.tokens[0].value.strVal),Value(), child.tokens[0].line));
 				}
-				if (child.tokens.size() == 2)
+				if (child.tokens.size() >= 2)
 				{
 					chain.push_back(Command(OpCodeMap::GetStringOpCode(child.tokens[0].value.strVal), child.tokens[1].value, child.tokens[0].line));
 				}
@@ -272,6 +272,7 @@ namespace ELScript
 					Command c = func_chain[i];
 					if (c.code == OpCode::EXCEPT_HANDLING && c.operand.strVal == "return") 
 					{
+						if (!(chain.back().code == OpCode::LOAD || chain.back().code == OpCode::PUSH || chain.back().code == OpCode::LOADM)) chain.push_back(Command(OpCode::PUSH, Value(), c.line));
 						chain.push_back(Command(OpCode::SCOPEEND, exit_depth, c.line));	//depth+1 так как токен func находится на более высоком уровне
 						chain.push_back(Command(OpCode::RET,Value(), c.line)); //Говорим виртуальной машине вернутся по стеку обратно
 					}
@@ -283,6 +284,7 @@ namespace ELScript
 
 				if (chain.back().code != OpCode::RET) //Нам же нужно как-то закончить выполнение функции?
 				{
+					chain.push_back(Command(OpCode::PUSH, Value(), node.tokens[current_index].line));	//Значение VOID 
 					chain.push_back(Command(OpCode::SCOPEEND, exit_depth, func_chain.size() > 0 ? func_chain.back().line: node.tokens[current_index].line));	//depth+1 так как токен func находится на более высоком уровне
 					chain.push_back(Command(OpCode::RET, Value(), func_chain.size() > 0 ? func_chain.back().line : node.tokens[current_index].line)); //Говорим виртуальной машине вернутся по стеку обратно
 				}
@@ -292,6 +294,17 @@ namespace ELScript
 				Logger::Get().Log("[Decoder] func declaration error. Line: " + std::to_string(node.tokens[current_index].line));
 			}
 		}
+
+		void DirectiveHandler(std::vector<Command>& chain, const Token& token) 
+		{
+			if (token.value.strVal == "#op_end") 
+			{
+				chain.push_back(Command(OpCode::NOP, "#op_end"));
+			}
+			if (token.type == TokenType::SCOPE_START) { chain.push_back(Command(OpCode::SCOPESTR, token.value, token.line));}
+			if (token.type == TokenType::SCOPE_END) { chain.push_back(Command(OpCode::SCOPEEND, (int)token.depth, token.line));}
+		}
+
 	public:
 		
 		void ClearState()
@@ -312,9 +325,8 @@ namespace ELScript
 			if (node.tokens.size() != 0)
 			{
 				for (int i = 0; i < node.tokens.size(); i++)	//Нахрен тут цикл?
-				{
+				{	
 					Token& token = node.tokens[i];
-
 					if (token.value.strVal == "if")
 					{
 						Handler_if(node, chain);
@@ -367,13 +379,17 @@ namespace ELScript
 						chain.push_back(Command(OpCode::EXCEPT_HANDLING, "return", token.line));	//вставляем return после значения
 						break;
 					}
-					if (token.type == TokenType::SCOPE_START) { chain.push_back(Command(OpCode::SCOPESTR, token.value, token.line)); break; }
-					if (token.type == TokenType::SCOPE_END) { chain.push_back(Command(OpCode::SCOPEEND, (int)token.depth, token.line)); break; }
-
-					
 					auto result = aluDecoder.ExpressionHandler(node.tokens);
 					chain.insert(chain.end(), result.begin(), result.end());
 					break;
+				}
+				for (int i = 0; i < node.tokens.size(); i++) //Отдельно проверяем директивы
+				{
+					Token& token = node.tokens[i];
+					if (token.value.strVal.size() > 0 && token.value.strVal.front() == '#')
+					{
+						DirectiveHandler(chain, token);
+					}
 				}
 			}
 			// Добавляем дочерние ноды (например, тело if/while)

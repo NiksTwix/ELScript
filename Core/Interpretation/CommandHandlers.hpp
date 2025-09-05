@@ -168,11 +168,6 @@ namespace ELScript
                 return;
 			}
 			Value val = chain.variables[index][command.operand.strVal];
-
-			if (val.type == ValueType::VOID) {
-				ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] LOAD: variable with type VOID " + command.operand.strVal + "."));
-                return;
-			}
 			chain.stack.push(val); // Кладём копию значения
 			
 		}
@@ -495,7 +490,8 @@ namespace ELScript
                     }
 
                     auto result = FunctionTable::Call(command.operand.strVal, chain.id, values);
-                    if (result.type != ValueType::VOID) chain.stack.push(result);
+                    //if (result.type != ValueType::VOID) chain.stack.push(result);
+                    chain.stack.push(result);   //TODO Добавить очистку стека
                     return;
                 }
                 ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CALL: function " + command.operand.strVal + " isnt declared in global scope."));
@@ -517,12 +513,15 @@ namespace ELScript
             chain.depth_call_stack.pop();
              // SUCCESS, а не RIP_INC_FREEZE, так как нам надо перейти на следующую после CALL инструкцию, иначе ошибка переполнения стека
         }
-
+        static void H_GET_TYPE_STR(Command& command, ExecutionChain& chain) {
+            Value val = GetStackTop(chain);
+            chain.stack.push(Value::GetTypeString(val.type));
+        }
         static void H_CONVERT_TYPE(Command& command, ExecutionChain& chain) {
             ValueType type = OpCodeMap::GetStringType(command.operand.strVal);
 
             Value v1 = GetStackTop(chain);
-            if (v1.type == type) 
+            if (v1.type == type) return;
 
             switch (type) {
             case ELScript::VOID:
@@ -550,11 +549,9 @@ namespace ELScript
                 if (v1.type == NUMBER) chain.stack.push(v1.numberVal != 0);
                 break;
             default:
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: invalid type."));
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: invalid type." + Value::GetTypeString(v1.type) + " to " + Value::GetTypeString(type) + "."));
                 return;
             }
-
-            
         }
 
         static void H_GET_BY(Command& command, ExecutionChain& chain) {

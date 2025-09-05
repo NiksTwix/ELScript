@@ -110,6 +110,7 @@ namespace ELScript
 					if (command_tokens.size() != 0) 
 					{
 						CommandNode node;
+						command_tokens.push_back(t);
 						node.tokens = command_tokens;
 						node.line = command_tokens.back().line;
 						command_tokens.clear();

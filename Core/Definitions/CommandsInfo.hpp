@@ -128,7 +128,27 @@ namespace ELScript
                 return "";
             }
         }
-
+        static std::string GetTypeString(ValueType type) 
+        {
+            std::string result;
+            switch (type)
+            {
+            case ELScript::VOID:
+                return "void";
+            case ELScript::NUMBER:
+                return "number";
+            case ELScript::STRING:
+                return "string";
+            case ELScript::BOOL:
+                return "bool";
+            case ELScript::ARRAY:
+                return "array";
+            case ELScript::DICT:
+                return "dict";
+            default:
+                return "void";
+            }
+        }
         // Деструктор
         ~Value() {
             destroyCurrent();
@@ -222,6 +242,7 @@ namespace ELScript
         SCOPESTR,   //Начало новой области видимости переменных
         SCOPEEND,    //Конец области видимости переменных
 
+        GET_TYPE_STR,
         CONVERT_TYPE,        //конвертация значения в number,string,bool
 
         //Работа с массивами
@@ -337,6 +358,7 @@ namespace ELScript
                 {"not", OpCode::NOT},
                 {"store", OpCode::STORE},
                 {"load", OpCode::LOAD},
+                {"loadm", OpCode::LOADM},
                 {"jmpa", OpCode::JMPA},
                 {"jmpr", OpCode::JMPR},
                 {"jmpa_if_n", OpCode::JMPA_IF_N},
@@ -353,6 +375,7 @@ namespace ELScript
                 {"scopeend", OpCode::SCOPEEND},
 
                 {"convert_type", OpCode::CONVERT_TYPE},
+                {"get_type_str", OpCode::GET_TYPE_STR},
                 {"get_by", OpCode::GET_BY},
                 {"set_by", OpCode::SET_BY},
                 {"array_push_back", OpCode::ARRAY_PUSH_BACK},

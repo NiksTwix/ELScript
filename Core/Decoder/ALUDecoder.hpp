@@ -254,8 +254,11 @@ namespace ELScript
 						i++;
 					}
 
-					if (i >= tokens.size()) throw std::runtime_error("Expected ':'");
-					i++; // Пропускаем ':'
+					if (i >= tokens.size()) 
+					{
+						ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[ALUDecoder] Expected ':'"));
+					}  
+					i++; // Пропускаем ':'   
 
 					// Парсим значение (до запятой или ])
 					std::vector<Token> value_tokens;
@@ -382,6 +385,31 @@ namespace ELScript
 						int parenDepth = 1; // Учитываем вложенные скобки
 
 						while (i < tokens.size() && parenDepth > 0) {
+							if (i < tokens.size() - 1 && tokens[i].type == TokenType::IDENTIFIER && tokens[i + 1].value.strVal == "(") 
+							{
+								std::vector<Token> inner_function_call;
+								inner_function_call.push_back(tokens[i]);
+								inner_function_call.push_back(tokens[i+1]);
+								i += 2;
+								int start = parenDepth;
+								parenDepth++;
+								for (; i < tokens.size(); i++) 
+								{
+									Token t = tokens[i];
+									if (tokens[i].value.strVal == "(") parenDepth++;
+									else if (tokens[i].value.strVal == ")" && parenDepth  == start + 1)
+									{
+										inner_function_call.push_back(tokens[i]);
+										parenDepth--;
+										break;
+									}
+									else if (tokens[i].value.strVal == ")")parenDepth--;
+									inner_function_call.push_back(tokens[i]);
+								}
+								auto f_call = ExpressionHandler(inner_function_call);
+								inversed_args.push_back(f_call);
+								i++;
+							}
 							if (tokens[i].value.strVal == "(") parenDepth++;
 							else if (tokens[i].value.strVal == ")") parenDepth--;
 							else if (tokens[i].value.strVal == "," && parenDepth == 1) {

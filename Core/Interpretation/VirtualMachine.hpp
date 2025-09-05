@@ -41,6 +41,7 @@ namespace ELScript
 			else if (command.code == OpCode::CALL)		CommandHandlers::H_CALL(command, chain);
 			else if (command.code == OpCode::RET)		CommandHandlers::H_RET(command, chain);
 			else if (command.code == OpCode::CONVERT_TYPE)		CommandHandlers::H_CONVERT_TYPE(command, chain);
+			else if (command.code == OpCode::GET_TYPE_STR)		CommandHandlers::H_GET_TYPE_STR(command, chain);
 			else if (command.code == OpCode::GET_BY)			CommandHandlers::H_GET_BY(command, chain);
 			else if (command.code == OpCode::SET_BY)			CommandHandlers::H_SET_BY(command, chain);
 			else if (command.code == OpCode::ARRAY_MAKE)			CommandHandlers::H_ARRAY_MAKE(command, chain);
@@ -100,7 +101,6 @@ namespace ELScript
 					break;
 				}
 				chain.current_rip = rip;
-				
 				ProcessCommand(chain);
 				if (error_catch) 
 				{

@@ -1,39 +1,42 @@
 
-var dick = "ХУЙ"
-
-var x = ["key":true,"key2":29*45, "tyr":dick]
-
-
-var z = x["key"]
-
-var j = x["key2"]
-print_value j
-x["key2"] = 516
-j = x["key2"]
-print_value z
-print_value j
-j = x["tyr"]
-print_value j
-x = ["test1", "test2", 600*345/5*2]
-
-var size = 0;
-
-op_code 
-{ 
-load x
-array_size
-store size
-}
-
-for i (0,size)
+func get_type(value)
 {
-	var h = x[i];
-	print_value h
+	var type = "void"
+	op_code
+	{
+		load value
+		get_type_str
+		store type
+	}
+	return type
 }
 
 
+func test1(return_result)
+{
+	if (return_result)
+	{
+		var x = 320
+		x = -x
+		return x		//-x почему-то не работает(опять надо что-то фиксить)
+	}
+	if (!return_result)
+	{
+		return
+	}
+	return
+}
 
 
+var x = test1(true)		//Заменяем на true
 
 
-
+if (get_type(get_type(x)) == "string")
+{
+	print_value "x is string"
+	print_value x
+}
+if (get_type(x) == "void")
+{
+	print_value "x is void"
+}

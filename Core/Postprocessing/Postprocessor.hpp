@@ -7,13 +7,23 @@ namespace ELScript
 	class Postprocessor 
 	{
 	public:
-		static std::unordered_map<std::string, FunctionData> GetFunctionTable(const std::vector<Command>& commands)
+		static std::unordered_map<std::string, FunctionData> GetFunctionTable(std::vector<Command>& commands)
 		{
 			std::unordered_map<std::string, FunctionData> function_name_rip;
 
 			for (int rip = 0; rip < commands.size(); rip++) 
 			{
-				Command c = commands[rip];
+				Command& c = commands[rip];
+
+				if (c.code == OpCode::CALL) 
+				{
+					if (rip < commands.size() - 1 && commands[rip + 1].operand.strVal == "#op_end") 
+					{
+						commands[rip + 1].code = OpCode::POP;
+						commands[rip + 1].operand.strVal = "";
+						continue;
+					}
+				}
 
 				if (c.code == OpCode::FUNC_DECLARE) 
 				{
