@@ -217,13 +217,13 @@ namespace ELScript
 
 					if (t.value.strVal == ",") 
 					{
-						expressions.push_back(temp_tokens);
+						if (!temp_tokens.empty()) expressions.push_back(temp_tokens);
 						temp_tokens.clear();
 						continue;
 					}
 					if (t.value.strVal == "]") 
 					{
-						expressions.push_back(temp_tokens);
+						if (!temp_tokens.empty())expressions.push_back(temp_tokens);
 						temp_tokens.clear();
 						break;
 					}

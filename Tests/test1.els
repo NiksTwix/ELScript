@@ -1,42 +1,41 @@
 
-func get_type(value)
+//var x = ["key1":100, "key2":200, "key3":300, "key4":400]
+//var x_array = []
+//var size = 0
+//
+//op_code
+//{
+//	load x
+//	dict_size
+//	store size
+//	load x
+//	convert_type array
+//	store x_array
+//}
+//
+//for s (0,size)
+//{
+//	var kv = x_array[s]
+//	var z = kv[0]
+//	var y = kv[1]
+//	print_value z
+//	print_value y
+//	print_value "----"
+//}
+
+var str = "kt2385"
+var size = 0
+op_code
 {
-	var type = "void"
-	op_code
-	{
-		load value
-		get_type_str
-		store type
-	}
-	return type
+	load str
+	convert_type array
+	store str
+	load str
+	array_size
+	store size
 }
-
-
-func test1(return_result)
+for s (0,size)
 {
-	if (return_result)
-	{
-		var x = 320
-		x = -x
-		return x		//-x почему-то не работает(опять надо что-то фиксить)
-	}
-	if (!return_result)
-	{
-		return
-	}
-	return
-}
-
-
-var x = test1(true)		//Заменяем на true
-
-
-if (get_type(get_type(x)) == "string")
-{
-	print_value "x is string"
-	print_value x
-}
-if (get_type(x) == "void")
-{
-	print_value "x is void"
+	var kv = str[s]
+	print_value kv
 }

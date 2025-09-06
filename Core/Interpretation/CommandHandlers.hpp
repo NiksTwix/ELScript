@@ -517,42 +517,7 @@ namespace ELScript
             Value val = GetStackTop(chain);
             chain.stack.push(Value::GetTypeString(val.type));
         }
-        static void H_CONVERT_TYPE(Command& command, ExecutionChain& chain) {
-            ValueType type = OpCodeMap::GetStringType(command.operand.strVal);
-
-            Value v1 = GetStackTop(chain);
-            if (v1.type == type) return;
-
-            switch (type) {
-            case ELScript::VOID:
-                chain.stack.push(Value());
-                break;
-            case ELScript::NUMBER:
-                if (v1.type == VOID) chain.stack.push(0);
-                if (v1.type == BOOL) chain.stack.push((int)v1.boolVal);
-                if (v1.type == STRING) {
-                    if (!StringOperations::IsNumber(v1.strVal)) {
-                        ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: string doesnt be converted to number."));
-                        return;
-                    }
-                    chain.stack.push(std::stod(v1.strVal));
-                }
-                break;
-            case ELScript::STRING:
-                if (v1.type == VOID) chain.stack.push("");
-                if (v1.type == BOOL) chain.stack.push(v1.boolVal ? "true" : "false");
-                if (v1.type == NUMBER) chain.stack.push(std::to_string(v1.numberVal));
-                break;
-            case ELScript::BOOL:
-                if (v1.type == VOID) chain.stack.push(false);
-                if (v1.type == STRING) chain.stack.push(v1.strVal == "true" ? true : false);
-                if (v1.type == NUMBER) chain.stack.push(v1.numberVal != 0);
-                break;
-            default:
-                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: invalid type." + Value::GetTypeString(v1.type) + " to " + Value::GetTypeString(type) + "."));
-                return;
-            }
-        }
+        
 
         static void H_GET_BY(Command& command, ExecutionChain& chain) {
             if (chain.stack.size() < 2) {
@@ -763,6 +728,66 @@ namespace ELScript
                 chain.stack.push((int)dict.dictVal->size());
                 break;
             }
+        }
+        static void H_CONVERT_TYPE(Command& command, ExecutionChain& chain) {
+            ValueType type = OpCodeMap::GetStringType(command.operand.strVal);
+
+            Value v1 = GetStackTop(chain);
+            if (v1.type == type) return;
+
+            switch (type) {
+            case ELScript::VOID:
+                chain.stack.push(Value());
+                return;
+            case ELScript::NUMBER:
+                if (v1.type == VOID) chain.stack.push(0);
+                if (v1.type == BOOL) chain.stack.push((int)v1.boolVal);
+                if (v1.type == STRING) {
+                    if (!StringOperations::IsNumber(v1.strVal)) {
+                        ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: string doesnt be converted to number."));
+                        return;
+                    }
+                    chain.stack.push(std::stod(v1.strVal));
+                }
+                return;
+            case ELScript::STRING:
+                if (v1.type == VOID) chain.stack.push("");
+                if (v1.type == BOOL) chain.stack.push(v1.boolVal ? "true" : "false");
+                if (v1.type == NUMBER) chain.stack.push(std::to_string(v1.numberVal));
+                return;
+            case ELScript::BOOL:
+                if (v1.type == VOID) chain.stack.push(false);
+                if (v1.type == STRING) chain.stack.push(v1.strVal == "true" ? true : false);
+                if (v1.type == NUMBER) chain.stack.push(v1.numberVal != 0);
+            case ELScript::ARRAY:
+                if (v1.type == VOID) chain.stack.push(std::make_shared<std::vector<Value>>());
+                if (v1.type == STRING) 
+                {
+                    std::vector<Value> literals_;
+                    for (auto chr : v1.strVal) 
+                    {
+                        std::string str = std::string(1,chr);
+                        literals_.push_back(Value(str));
+                    }
+                    chain.stack.push(Value(std::make_shared<std::vector<Value>>(literals_)));
+                };
+                if (v1.type == DICT) {
+                    auto result_array = std::make_shared<std::vector<Value>>(); // Главный массив
+                    for (auto& [key, value] : *v1.dictVal) {
+                        // Создаём массив для пары [key, value]
+                        auto pair_array = std::make_shared<std::vector<Value>>();
+                        pair_array->push_back(Value(key));    // Ключ как строка
+                        pair_array->push_back(value);         // Значение как есть
+                        result_array->push_back(Value(pair_array)); // Добавляем пару в результат
+                    }
+                    chain.stack.push(Value(result_array));
+                }
+                return;
+            default:
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: invalid type." + Value::GetTypeString(v1.type) + " to " + Value::GetTypeString(type) + "."));
+                return;
+            }
+            ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] CONVERT_TYPE: invalid type." + Value::GetTypeString(v1.type) + " to " + Value::GetTypeString(type) + "."));
         }
 	};
 }

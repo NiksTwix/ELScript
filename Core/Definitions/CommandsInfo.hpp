@@ -394,7 +394,8 @@ namespace ELScript
                 {"string",ValueType::STRING},
                 {"bool",ValueType::BOOL},
                 {"number",ValueType::NUMBER},
-                {"void",ValueType::NUMBER},
+                {"array",ValueType::ARRAY},
+                {"void",ValueType::VOID},
             };
             return typeMap;
         }
