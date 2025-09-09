@@ -201,6 +201,7 @@ namespace ELScript
 
         PUSH,
         POP,
+        SWAP,
         CALL,
         RET,
         ADD,
@@ -225,11 +226,8 @@ namespace ELScript
         LOADM,  //LOAD META
         //IF A- Absolute, R-relative
         JMPA,
-        JMPR,
         JMPA_IF_N,
         JMPA_IF,
-        JMPR_IF_N,
-        JMPR_IF,
 
         PRINT,
 
@@ -360,11 +358,8 @@ namespace ELScript
                 {"load", OpCode::LOAD},
                 {"loadm", OpCode::LOADM},
                 {"jmpa", OpCode::JMPA},
-                {"jmpr", OpCode::JMPR},
                 {"jmpa_if_n", OpCode::JMPA_IF_N},
                 {"jmpa_if", OpCode::JMPA_IF},
-                {"jmpr_if_n", OpCode::JMPR_IF_N},
-                {"jmpr_if", OpCode::JMPR_IF},
                 {"print", OpCode::PRINT},
                 {"except_handling", OpCode::EXCEPT_HANDLING},
                 {"declare", OpCode::DECLARE},

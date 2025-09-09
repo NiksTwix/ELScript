@@ -199,10 +199,6 @@ namespace ELScript
 
 			}
 			
-			std::shared_ptr<std::unordered_map<std::string, Value>> ParseDict(std::vector<Token>& tokens, size_t& i, size_t line) {
-				std::unordered_map<std::string, Value> dict;
-				return std::make_shared<std::unordered_map<std::string, Value>>(dict);
-			}
 			std::vector<Command> ParseArray(std::vector<Token>& tokens, size_t& i, size_t line) {
 				std::vector<std::vector<Token>> expressions;
 				i++; //Скипаем [
@@ -346,29 +342,50 @@ namespace ELScript
 					if (i + 1 < tokens.size() && tokens[i + 1].value.strVal == "[") //работает и для словарей
 					{
 						std::string arrayName = t.value.strVal;
-						i += 2;// Пропускаем имя массива и открывающую скобку [
-						// Собираем выражение внутри скобок (индекс) до закрывающей ]
+						i += 1;
 						std::vector<Token> indexExpr;
-						int bracketDepth = 1;
+						int bracketDepth = 1;	
 
-						while (i < tokens.size() && bracketDepth > 0) {
-							if (tokens[i].value.strVal == "[") bracketDepth++;
-							else if (tokens[i].value.strVal == "]") bracketDepth--;
-							else {
-								indexExpr.push_back(tokens[i]);
+						std::vector<Command> index_commands;
+
+						bool greater_than_one_time = false;
+
+						for (; i < tokens.size(); i++) 
+						{
+							if (tokens[i].value.strVal == "]" && bracketDepth-1 == 1) //[][][]
+							{
+								index_commands = ExpressionHandler(indexExpr);
+								commands.insert(commands.end(), index_commands.begin(), index_commands.end()); // Вычисляем индекс, кладём на стек
+								
+								if (greater_than_one_time) commands.push_back(Command(OpCode::SWAP, Value(), t.line));
+								else
+								{
+									commands.push_back(Command(OpCode::LOAD, arrayName, t.line)); // Загружаем массив (или его адрес)
+								}
+								commands.push_back(Command(OpCode::GET_BY, Value(), t.line)); // GET_INDEX: stack -> [array, index] -> value
+								bracketDepth--;
+								indexExpr.clear();
+								greater_than_one_time = true;
+								if (i == tokens.size() - 1 || (i < tokens.size() - 2 && tokens[i + 1].value.strVal != "["))
+								{
+									i--;
+									break;
+								}
+								continue;
 							}
-							i++;
+
+							if (tokens[i].value.strVal == "[")
+							{
+								bracketDepth++;
+								if (bracketDepth - 1 > 1) indexExpr.push_back(tokens[i]);
+							}
+							else if (tokens[i].value.strVal == "]")
+							{
+								if (bracketDepth - 1 > 1) indexExpr.push_back(tokens[i]);
+								bracketDepth--;
+							}
+							else indexExpr.push_back(tokens[i]);
 						}
-						i--; // Корректируем индекс, т.к. цикл while перебрал токен ']'
-						// Рекурсивно обрабатываем выражение индекса
-						auto indexCommands = ExpressionHandler(indexExpr);
-						// Генерируем код:
-
-						commands.insert(commands.end(), indexCommands.begin(), indexCommands.end()); // Вычисляем индекс, кладём на стек
-						commands.push_back(Command(OpCode::LOAD, arrayName, t.line)); // Загружаем массив (или его адрес)
-
-						commands.push_back(Command(OpCode::GET_BY, Value(), t.line)); // GET_INDEX: stack -> [array, index] -> value
-						continue;
 					}
 
 					// Проверяем, не является ли следующий токен открывающей скобкой - признак вызова функции

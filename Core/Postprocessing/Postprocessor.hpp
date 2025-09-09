@@ -87,15 +87,6 @@ namespace ELScript
 					}
 					commands[rip].operand = target_name_rip[c.operand.strVal];
 				}
-				if (c.code == OpCode::JMPR || c.code == OpCode::JMPR_IF || c.code == OpCode::JMPR_IF_N)
-				{
-					if (!target_name_rip.count(c.operand.strVal))
-					{
-						Logger::Get().Log("[Postprocessor] invalid label. RIP: " + std::to_string(rip));
-						continue;
-					}
-					commands[rip].operand = target_name_rip[c.operand.strVal] - rip;
-				}
 			}
 		}
 	};

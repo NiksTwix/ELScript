@@ -43,6 +43,18 @@ namespace ELScript
 			chain.stack.push(command.operand);
 			
 		}
+        static void H_SWAP(Command& command, ExecutionChain& chain)
+        {
+            if (chain.stack.size() < 2)
+            {
+                ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] SWAP: not enough arguments."));
+                return;
+            }
+            auto t1 = GetStackTop(chain);
+            auto t2 = GetStackTop(chain);
+            chain.stack.push(t1);
+            chain.stack.push(t2);
+        }
 		static void H_POP(Command& command, ExecutionChain& chain)
 		{
 			if (chain.stack.empty())
@@ -231,13 +243,8 @@ namespace ELScript
 				ErrorHandlerManager::RaiseError(EHMessage(chain.id, command, chain.current_rip, EHMessageType::Error, "[VM] Invalid jump target: " + std::to_string((int)command.operand.numberVal)));
                 return;
 			}
+			chain.current_rip = target;   // Аналогично для абсолютного перехода
 
-			if (command.code == OpCode::JMPR) {
-				chain.current_rip += target;  // Компенсируем +1 в цикле VM
-			}
-			else if (command.code == OpCode::JMPA) {
-				chain.current_rip = target;   // Аналогично для абсолютного перехода
-			}
 			if (chain.current_rip < 0) chain.current_rip = 0;
 			
 		}
@@ -253,9 +260,7 @@ namespace ELScript
                 (operand.type == ValueType::NUMBER && operand.numberVal != 0.0f);
 
             if (shouldJump) {
-                Command c(OpCode::NOP, command.operand);
-                if (command.code == OpCode::JMPR_IF) c.code = OpCode::JMPR;
-                if (command.code == OpCode::JMPA_IF) c.code = OpCode::JMPA;
+                Command c(OpCode::JMPA, command.operand);
                 return H_JMP(c, chain);  // Используем общую логику прыжка
             }
             
@@ -272,9 +277,7 @@ namespace ELScript
                 (operand.type == ValueType::NUMBER && operand.numberVal == 0.0f);
 
             if (shouldJump) {
-                Command c(OpCode::NOP, command.operand);
-                if (command.code == OpCode::JMPR_IF_N) c.code = OpCode::JMPR;
-                if (command.code == OpCode::JMPA_IF_N) c.code = OpCode::JMPA;
+                Command c(OpCode::JMPA, command.operand);
                 return H_JMP(c, chain);  // Используем общую логику прыжка
             }
             

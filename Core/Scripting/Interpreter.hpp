@@ -144,7 +144,7 @@ namespace ELScript
             auto tokens = GetTokens(script_path);
 
             auto raw_ec = Decoder::Get().DecodeTokens(tokens);
-            Postprocessor::CalculateJMPs(raw_ec.commands);
+            
 
             auto id = next_id++;
             scripts[id] = std::make_shared<Script>();
@@ -152,9 +152,17 @@ namespace ELScript
             scripts[id]->name = script_path.filename().string();
             scripts[id]->scriptPath = script_path;
             scripts[id]->execution_chain.function_markers = Postprocessor::GetFunctionTable(raw_ec.commands);
+            Postprocessor::CalculateJMPs(raw_ec.commands);      //В будущем будет удалять метки 
             scripts[id]->execution_chain.commands = raw_ec.commands;
             scripts[id]->execution_chain.exit_rip = raw_ec.exit_rip;
             return id;
+        }
+
+        bool DestroyScript(ECID id) 
+        {
+            if (!scripts.count(id)) return false;
+            scripts.erase(id);
+            return true;
         }
 
         std::shared_ptr<Script> GetScript(ECID script)

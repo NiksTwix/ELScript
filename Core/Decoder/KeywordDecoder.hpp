@@ -91,7 +91,7 @@ namespace ELScript
 			}
 
 			chain.insert(chain.end(), while_chain.begin(), while_chain.end());
-			chain.push_back(Command(OpCode::JMPR, start_label, chain.back().line));	//Прыгаем обратно
+			chain.push_back(Command(OpCode::JMPA, start_label, chain.back().line));	//Прыгаем обратно
 			chain.push_back(Command(OpCode::LABEL, end_label));
 		}
 
@@ -144,7 +144,7 @@ namespace ELScript
 			std::string declare_label = StringOperations::GenerateLabel("#for_declare");
 
 			chain.push_back(Command(OpCode::DECLARED, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPR_IF, declare_label, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA_IF, declare_label, node.tokens[0].line));
 			chain.push_back(Command(OpCode::DECLARE, variable, node.tokens[0].line));
 			chain.push_back(Command(OpCode::LABEL, declare_label, node.tokens[0].line));
 			auto start = aluDecoder.ExpressionHandler(args[0]);
@@ -196,7 +196,7 @@ namespace ELScript
 			chain.insert(chain.end(), step.begin(), step.end());
 			chain.push_back(Command(OpCode::ADD, Value(), node.tokens[0].line));
 			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPR, check_label, node.tokens[0].line));	//Прыгаем обратно
+			chain.push_back(Command(OpCode::JMPA, check_label, node.tokens[0].line));	//Прыгаем обратно
 			chain.push_back(Command(OpCode::LABEL, end_label, node.tokens[0].line));
 		}
 
@@ -223,7 +223,7 @@ namespace ELScript
 			{
 				std::string label = StringOperations::GenerateLabel("#var_declared");
 				chain.push_back(Command(OpCode::DECLARED, node.tokens[current_index + 1].value, node.tokens[current_index].line));
-				chain.push_back(Command(OpCode::JMPR_IF, label, node.tokens[current_index].line));
+				chain.push_back(Command(OpCode::JMPA_IF, label, node.tokens[current_index].line));
 				chain.push_back(Command(OpCode::DECLARE, node.tokens[current_index + 1].value, node.tokens[current_index].line));
 				chain.push_back(Command(OpCode::LABEL, label, node.tokens[current_index].line));
 				std::vector<Token> tokens_of;
@@ -272,7 +272,7 @@ namespace ELScript
 					Command c = func_chain[i];
 					if (c.code == OpCode::EXCEPT_HANDLING && c.operand.strVal == "return") 
 					{
-						if (!(chain.back().code == OpCode::LOAD || chain.back().code == OpCode::PUSH || chain.back().code == OpCode::LOADM)) chain.push_back(Command(OpCode::PUSH, Value(), c.line));
+						if (chain.back().operand.strVal == "#op_end") chain.push_back(Command(OpCode::PUSH, Value(), c.line));
 						chain.push_back(Command(OpCode::SCOPEEND, exit_depth, c.line));	//depth+1 так как токен func находится на более высоком уровне
 						chain.push_back(Command(OpCode::RET,Value(), c.line)); //Говорим виртуальной машине вернутся по стеку обратно
 					}
@@ -282,7 +282,7 @@ namespace ELScript
 					}
 				}
 
-				if (chain.back().code != OpCode::RET) //Нам же нужно как-то закончить выполнение функции?
+				if (chain[chain.size()-1].code != OpCode::RET && (chain.size() > 0 && chain[chain.size()-2].code != OpCode::RET)) //Нам же нужно как-то закончить выполнение функции? Второе условие из-за того, что return #op_end может завершиться
 				{
 					chain.push_back(Command(OpCode::PUSH, Value(), node.tokens[current_index].line));	//Значение VOID 
 					chain.push_back(Command(OpCode::SCOPEEND, exit_depth, func_chain.size() > 0 ? func_chain.back().line: node.tokens[current_index].line));	//depth+1 так как токен func находится на более высоком уровне
