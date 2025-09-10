@@ -147,31 +147,43 @@ namespace ELScript
 			{
 				Token t = tokens[i];
 				std::string arrayName = t.value.strVal;
-				Token assignOp;
-				int assign_index = -1;
-				for (int j = i; j < tokens.size(); j++)
-				{
-					if (IsAssignOperator(tokens[j]))
-					{
-						assignOp = tokens[j];
-						assign_index = j;
-					}
-				}
+				i++;
 				// Пропускаем имя, оператор присваивания и '['
 				// Собираем выражение индекса (аналогично чтению)
-				std::vector<Token> indexExpr;
+				std::vector<Token> current_indexExpr;
+				std::vector<std::vector<Token>> indexExpressions;	//[200][[345]][1] = 100
 				int bracketDepth = 0;
-
+				//Сборка всех обращений цепи
 				while (i < tokens.size()) {
-					if (tokens[i].value.strVal == "[") bracketDepth++;
-					else if (tokens[i].value.strVal == "]") bracketDepth--;
-					else if (bracketDepth > 0) {
-						indexExpr.push_back(tokens[i]);
-					}
 					if (IsAssignOperator(tokens[i]))
 					{
+						if (current_indexExpr.size() > 0)
+						{
+							//TODO Error message
+						}
 						break;
 					}
+					//Внешние скобки
+					if (tokens[i].value.strVal == "[" && bracketDepth == 0)
+					{
+						bracketDepth++;
+						i++;
+						continue;
+					}
+					if (tokens[i].value.strVal == "]" && bracketDepth - 1 == 0)
+					{
+						indexExpressions.push_back(current_indexExpr);
+						current_indexExpr.clear();
+						bracketDepth--;
+						i++;
+						continue;
+					}
+					//Обработка выражения
+					if (tokens[i].value.strVal == "[") bracketDepth++;
+					else if (tokens[i].value.strVal == "]") bracketDepth--;
+					
+					current_indexExpr.push_back(tokens[i]);
+
 					i++;
 				}
 				// i теперь на токене после ']'
@@ -179,24 +191,51 @@ namespace ELScript
 				// Собираем выражение правой части (значение)
 				std::vector<Token> rightExpr;
 
+			
 				while (i < tokens.size()) {
 					rightExpr.push_back(tokens[i]);
 					i++;
 				}
-
-				auto indexCommands = ExpressionHandler(indexExpr);
 				auto valueCommands = ExpressionHandler(rightExpr);
-
-				// Генерируем код для присваивания по индексу:
-				// 1. Вычисляем значение (правая часть)
 				commands.insert(commands.end(), valueCommands.begin(), valueCommands.end());
-				// 2. Вычисляем индекс
-				commands.insert(commands.end(), indexCommands.begin(), indexCommands.end());
-				// 3. Загружаем массив
-				commands.push_back(Command(OpCode::LOAD, arrayName, t.line));
-				// 4. Присваиваем: stack -> [value, index, array] -> (ничего)
-				commands.push_back(Command(OpCode::SET_BY, assignOp.value.strVal, t.line)); // Передаём оператор для составных += и т.д.
 
+				//Вычисляем индексы
+				bool first = true;
+
+				for (int j = 0; j < indexExpressions.size() - 1; j++) //Обрабатываем все [] до последней как запрос на получение из массива
+				{
+					auto index_commands = ExpressionHandler(indexExpressions[j]);
+
+					commands.insert(commands.end(), index_commands.begin(), index_commands.end());	//Вычисляем индекс
+
+					if (!first) 
+					{
+						commands.push_back(Command(OpCode::SWAP, Value(), t.line));	//Меняем индекс и полученный массив местами
+					}
+					if (first) 
+					{
+						commands.push_back(Command(OpCode::LOAD, arrayName, t.line));
+						first = false;
+					}
+					commands.push_back(Command(OpCode::GET_BY, Value(), t.line));
+				}
+				if (indexExpressions.size() == 1) 
+				{
+					auto indexCommands = ExpressionHandler(indexExpressions.back());
+					commands.insert(commands.end(), indexCommands.begin(), indexCommands.end());
+					// 3. Загружаем массив
+					commands.push_back(Command(OpCode::LOAD, arrayName, t.line));
+					// 4. Присваиваем: stack -> [value, index, array] -> (ничего)
+					commands.push_back(Command(OpCode::SET_BY, Value(), t.line)); // Передаём оператор для составных += и т.д.
+				}
+				else if (indexExpressions.size() > 1)
+				{
+					auto indexCommands = ExpressionHandler(indexExpressions.back());
+					commands.insert(commands.end(), indexCommands.begin(), indexCommands.end());
+
+					commands.push_back(Command(OpCode::SWAP, Value(), t.line));	//Меняем индекс и полученный массив местами
+					commands.push_back(Command(OpCode::SET_BY, Value(), t.line)); // Передаём оператор для составных += и т.д.
+				}
 			}
 			
 			std::vector<Command> ParseArray(std::vector<Token>& tokens, size_t& i, size_t line) {
