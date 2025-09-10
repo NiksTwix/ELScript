@@ -291,7 +291,7 @@ namespace ELScript
 
 					if (i >= tokens.size()) 
 					{
-						ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[ALUDecoder] Expected ':'"));
+						MessageHandlerManager::RaiseError(Message(MessageType::Error, "[ALUDecoder] Expected ':'"));
 					}  
 					i++; // Пропускаем ':'   
 
@@ -552,7 +552,7 @@ namespace ELScript
 						}
 						else 
 						{
-							ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[ALUDecoder] invalid meta variable."));
+							MessageHandlerManager::RaiseError(Message(MessageType::Error, "[ALUDecoder] invalid meta variable."));
 						}
 					}
 					

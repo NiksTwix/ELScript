@@ -5,13 +5,14 @@
 
 namespace ELScript
 {
-    enum class EHMessageType
+    enum class MessageType
     {
         Warning,
-        Error
+        Error,
+        Info
     };
 
-    struct EHMessage    //Error Handler Message
+    struct Message    //Error Handler Message
     {
         ECID script = InvalidECID;
         int line = 0;
@@ -19,23 +20,31 @@ namespace ELScript
         Command error_command;
         std::stack<Value> stack;    //копии стеков
         std::stack<int> call_stack;
-        EHMessageType type;
+        MessageType type;
+
         std::string description; // Добавим описание ошибки
 
-        EHMessage() = default;
-        EHMessage(ECID id, int c_rip, EHMessageType type, std::string desc)
+        Message(ECID id,std::string desc)
+        {
+            this->script = id;
+            this->script = id;
+            this->description = desc;
+        }
+
+        Message() = default;
+        Message(ECID id, int c_rip, MessageType type, std::string desc)
         {
             this->script = id;
             this->description = desc;
             this->rip = c_rip;
             this->type = type;
         }
-        EHMessage(EHMessageType type, std::string desc)
+        Message(MessageType type, std::string desc)
         {
             this->description = desc;
             this->type = type;
         }
-        EHMessage(ECID id, Command error_command, int c_rip, EHMessageType type, std::string desc)
+        Message(ECID id, Command error_command, int c_rip, MessageType type, std::string desc)
         {
             this->script = id;
             this->description = desc;
@@ -46,39 +55,65 @@ namespace ELScript
         }
     };
 
-    using ErrorHandlerCallback = std::function<void(const EHMessage& message)>; // Переименуем тип колбэка
-    using EHID = size_t;    //Error Handler ID
-    constexpr EHID InvalidEHID = SIZE_MAX;
-    class ErrorHandlerManager 
+    using MessageHandlerCallback = std::function<void(const Message& message)>; // Переименуем тип колбэка
+    using MHID = size_t;    //Message Handler ID
+    constexpr MHID InvalidMHID = SIZE_MAX;
+    class MessageHandlerManager 
     {
     private:
-        ErrorHandlerManager() = default;
-        std::unordered_map<EHID, ErrorHandlerCallback> error_handlers;
-        EHID next_ehid = 0;
+        MessageHandlerManager() = default;
+        std::unordered_map<MHID, MessageHandlerCallback> error_handlers;
+        std::unordered_map<MHID, MessageHandlerCallback> info_handlers;
+        MHID next_ehid = 0;
 
-        static ErrorHandlerManager& Get()
+        static MessageHandlerManager& Get()
         {
-            static ErrorHandlerManager instance;
+            static MessageHandlerManager instance;
             return instance;
         }
 
     public:
-        static EHID Register(ErrorHandlerCallback handler)
+        static MHID Register(MessageHandlerCallback handler, MessageType type = MessageType::Error)
         {
             auto& instance = Get();
-            EHID id = instance.next_ehid++;
-            instance.error_handlers[id] = handler;
+            MHID id = instance.next_ehid++;
+            switch (type)
+            {
+            case ELScript::MessageType::Warning:
+                break;
+            case ELScript::MessageType::Error:
+                instance.error_handlers[id] = handler;
+                break;
+            case ELScript::MessageType::Info:
+                instance.info_handlers[id] = handler;
+                break;
+            default:
+                instance.error_handlers[id] = handler;
+                break;
+            }
+           
             return id;
         }
 
-        static bool Unregister(EHID id)
+        static bool Unregister(MHID id)
         {
             auto& instance = Get();
-            return instance.error_handlers.erase(id) > 0;
-        }
 
+            bool result = instance.error_handlers.erase(id) > 0;
+            if (result) return true;
+            result = instance.info_handlers.erase(id) > 0;
+            if (result) return true;
+            return result;
+        }
+        static void SendInfo(const Message& message)
+        {
+            auto& instance = Get();
+            for (auto& [id, handler] : instance.info_handlers) {
+                handler(message); // Вызываем каждый зарегистрированный обработчик
+            }
+        }
         // Главный метод для вызова всех обработчиков
-        static void RaiseError(const EHMessage& message)
+        static void RaiseError(const Message& message)
         {
             auto& instance = Get();
             for (auto& [id, handler] : instance.error_handlers) {

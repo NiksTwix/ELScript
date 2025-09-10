@@ -2,14 +2,16 @@
 #include "CommandHandlers.hpp"
 #include "..\Definitions\Execution.hpp"
 #include <functional>
-
+#include <sstream>
 
 namespace ELScript
 {
+	
 	class VirtualMachine
 	{
-		using handler = void(*)(Command&, ExecutionChain&);
-		std::unordered_map<OpCode, handler> handlers;
+		using Handler = void(*)(Command&, ExecutionChain&);
+		
+		std::unordered_map<OpCode, Handler> handlers;
 	private:
 
 		void HandlersMapInitialization()
@@ -83,13 +85,14 @@ namespace ELScript
 		}
 
 		bool error_catch = false;
-		EHID eh_id = InvalidEHID;
+		MHID eh_id = InvalidMHID;
 		ExecutionChain* current_echain;
+
 	public:
 		VirtualMachine()
 		{
 			HandlersMapInitialization();
-			eh_id = ErrorHandlerManager::Register([&](const EHMessage message)
+			eh_id = MessageHandlerManager::Register([&](const Message message)
 				{
 					if (current_echain != nullptr && current_echain->GetID() == message.script)
 					{
@@ -115,7 +118,7 @@ namespace ELScript
 				if (rip < 0)
 				{
 					rip = 0;
-					ErrorHandlerManager::RaiseError(EHMessage(chain.id, chain.commands[rip], rip, EHMessageType::Warning, "[VM] Warning: rip was moved to position less than zero."));
+					MessageHandlerManager::RaiseError(Message(chain.id, chain.commands[rip], rip, MessageType::Warning, "[VM] Warning: rip was moved to position less than zero."));
 				}
 				if (chain.commands[rip].code == OpCode::EXIT)
 				{

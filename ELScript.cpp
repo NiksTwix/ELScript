@@ -8,6 +8,5 @@ int main()
     auto id = inter_.LoadScript("E:\\CPP\\MyLibs\\ELScript\\Tests\\test1.els");
     inter_.SetMetaVariable(id, "test", ELScript::Value(100));
     inter_.Execute(id);
-    
 }
 

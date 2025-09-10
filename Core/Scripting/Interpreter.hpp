@@ -21,13 +21,8 @@ namespace ELScript
 
         ECID next_id = 1;
 
-        std::vector<Token> GetTokens(const std::filesystem::path& scriptPath) {
-            if (!Loader::Get().IsFileExists(scriptPath)) {
-                Logger::Get().Log("[Interpreter] ERROR: File not found - " + scriptPath.string());
-                return {};
-            }
-            std::filesystem::path currentDir = scriptPath.parent_path(); // <-- Важно!
-            std::string text = Loader::Get().Load(scriptPath.string());
+        std::vector<Token> GetTokensFromString(std::string text, std::filesystem::path currentDir)
+        {
             std::vector<Token> tokens = Lexer::Get().ToTokens(text);
             std::vector<Token> result;
 
@@ -66,6 +61,16 @@ namespace ELScript
             }
             result.insert(result.end(), main_script_buffer.begin(), main_script_buffer.end());
             return result;
+        }
+
+        std::vector<Token> GetTokens(const std::filesystem::path& scriptPath) {
+            if (!Loader::Get().IsFileExists(scriptPath)) {
+                Logger::Get().Log("[Interpreter] ERROR: File not found - " + scriptPath.string());
+                return {};
+            }
+            std::filesystem::path currentDir = scriptPath.parent_path(); // <-- Важно!
+            std::string text = Loader::Get().Load(scriptPath.string());
+            return GetTokensFromString(text, currentDir);
         }
 
         // Вынесем разрешение пути в отдельную функцию
@@ -123,19 +128,29 @@ namespace ELScript
                     return CallFunction(script.numberVal, func_name.strVal, *args_.arrayVal);
                    
                 });
-            eh_id = ErrorHandlerManager::Register([&](const EHMessage message)
+            eh_id = MessageHandlerManager::Register([&](const Message message)
                 {
-                    Logger::Get().Log(message.description);
+                    if (cmd_output)Logger::Get().Log(message.description);
                 });
+            MessageHandlerManager::Register([&](const Message message)
+                {
+                    if (cmd_output)Logger::Get().Log(message.description);
+                },MessageType::Info);
         }
         //TODO добавить обработчик
-        EHID eh_id = InvalidEHID;
+        MHID eh_id = InvalidMHID;
+        bool cmd_output = true;
     public:
 
         static Interpreter& Get() 
         {
             static Interpreter interpreter;
             return interpreter;
+        }
+
+        void SetCMDOutput( bool value) 
+        {
+            cmd_output = value;
         }
 
         ECID LoadScript(std::filesystem::path script_path)
@@ -157,7 +172,25 @@ namespace ELScript
             scripts[id]->execution_chain.exit_rip = raw_ec.exit_rip;
             return id;
         }
+        ECID FromSource(std::string text,std::string name = "ELS script")   //Импорты не работают.
+        {
+            processed_files.clear();
+            auto tokens = GetTokensFromString(text, std::filesystem::path());
 
+            auto raw_ec = Decoder::Get().DecodeTokens(tokens);
+
+
+            auto id = next_id++;
+            scripts[id] = std::make_shared<Script>();
+            scripts[id]->execution_chain.id = id;
+            scripts[id]->name = name;
+            scripts[id]->scriptPath = "Internal";
+            scripts[id]->execution_chain.function_markers = Postprocessor::GetFunctionTable(raw_ec.commands);
+            Postprocessor::CalculateJMPs(raw_ec.commands);      //В будущем будет удалять метки 
+            scripts[id]->execution_chain.commands = raw_ec.commands;
+            scripts[id]->execution_chain.exit_rip = raw_ec.exit_rip;
+            return id;
+        }
         bool DestroyScript(ECID id) 
         {
             if (!scripts.count(id)) return false;
@@ -179,27 +212,27 @@ namespace ELScript
             }
             else if (scripts.count(script) && scripts.at(script)->execution_chain.state == ECState::ACTIVE) 
             {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " is active."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " is active."));
             }
             else 
             {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
             }
         }
         Value CallFunction(ECID script, std::string function_name, std::vector<Value> parameters) {
             auto script_ = GetScript(script);
             if (!script_) {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
                 return Value();
             }
 
             if (script_->execution_chain.state == ECState::ACTIVE) {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " is active."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " is active."));
                 return Value();
             }
 
             if (!script_->execution_chain.function_markers.count(function_name)) {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: function " + function_name + " not found."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: function " + function_name + " not found."));
                 return Value();
             }
 
@@ -207,7 +240,7 @@ namespace ELScript
 
             if (parameters.size() != script_->execution_chain.function_markers[function_name].arguments.size()) 
             {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: the number of parameters passed does not match the function " + function_name + " parameters."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: the number of parameters passed does not match the function " + function_name + " parameters."));
                 return Value();
             }
 
@@ -235,7 +268,7 @@ namespace ELScript
         {
             auto script_ = GetScript(script);
             if (!script_) {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
                 return;
             }
             script_->execution_chain.meta_variables[name] = value;
@@ -244,12 +277,12 @@ namespace ELScript
         {
             auto script_ = GetScript(script);
             if (!script_) {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: script with id " + std::to_string(script) + " isnt defined."));
                 return Value();
             }
             if (!script_->execution_chain.meta_variables.count(name)) 
             {
-                ErrorHandlerManager::RaiseError(EHMessage(EHMessageType::Error, "[Interpreter] ERROR: meta variable " + name + " isnt defined."));
+                MessageHandlerManager::RaiseError(Message(MessageType::Error, "[Interpreter] ERROR: meta variable " + name + " isnt defined."));
                 return Value();
             }
             return script_->execution_chain.meta_variables[name];
