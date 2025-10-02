@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <unordered_set>
+#include <memory>
 
 namespace ELScript
 {
