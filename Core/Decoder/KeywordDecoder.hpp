@@ -2,7 +2,7 @@
 #include "..\Definitions/CommandsInfo.hpp"
 #include "..\Logger/Logger.hpp"
 #include "ALUDecoder.hpp"
-
+#include "..\Definitions\StringOperations.hpp"
 namespace ELScript 
 {
 	class KeywordDecoder 
@@ -102,11 +102,8 @@ namespace ELScript
 				Logger::Get().Log("[Decoder] Invalid 'for' cycle.");
 				return;
 			}
-			std::string check_label = StringOperations::GenerateLabel("#for_check");
-			std::string add_label = StringOperations::GenerateLabel("#for_add");
-			std::string end_label = StringOperations::GenerateLabel("#for_end");
+			//Разбор аргументов
 			bool in_brathes = false;
-
 			std::vector<std::vector<Token>> args;
 			args.push_back({});
 			std::string variable = "";
@@ -141,32 +138,77 @@ namespace ELScript
 			if (variable == "") { Logger::Get().Log("[Decoder] Invalid for cycle. Invalid cycle's variable name. Line: " + std::to_string(node.tokens[0].line)); return; }
 			//Declaring
 
-			std::string declare_label = StringOperations::GenerateLabel("#for_declare");
+			//Метки
+			std::string label_for_check = StringOperations::GenerateLabel("#for_check");
+			std::string label_for_add = StringOperations::GenerateLabel("#for_add");
+			std::string label_for_end = StringOperations::GenerateLabel("#for_end");
+			std::string label_for_body = StringOperations::GenerateLabel("#for_body");
+			std::string label_for_greater = StringOperations::GenerateLabel("#for_greater");
+			std::string label_for_greater_start = StringOperations::GenerateLabel("#for_greater_start");	//If step < 0 variable has end value
+			//Константы
+			std::string const_for_start = StringOperations::GenerateLabel("#const_for_start");
+			std::string const_for_end = StringOperations::GenerateLabel("#const_for_end");
+			std::string const_for_step = StringOperations::GenerateLabel("#const_for_step");
 
-			chain.push_back(Command(OpCode::DECLARED, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPA_IF, declare_label, node.tokens[0].line));
-			chain.push_back(Command(OpCode::DECLARE, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::LABEL, declare_label, node.tokens[0].line));
 			auto start = aluDecoder.ExpressionHandler(args[0]);
 			auto end = aluDecoder.ExpressionHandler(args[1]);
 			auto step = aluDecoder.ExpressionHandler(args[2]);
 
+			//Variable
+			chain.push_back(Command(OpCode::DECLARE, variable, node.tokens[0].line));	//Declare variable without exists check
+			chain.push_back(Command(OpCode::DECLARE, const_for_start, node.tokens[0].line));
+			chain.push_back(Command(OpCode::DECLARE, const_for_end, node.tokens[0].line));
+			chain.push_back(Command(OpCode::DECLARE, const_for_step, node.tokens[0].line));
+			//Calculate constant
 			chain.insert(chain.end(), start.begin(), start.end());
+			chain.push_back(Command(OpCode::STORE, const_for_start, node.tokens[0].line));
+			//----------
+			chain.insert(chain.end(), end.begin(), end.end());
+			chain.push_back(Command(OpCode::STORE, const_for_end, node.tokens[0].line));
+			//----------
+			chain.insert(chain.end(), step.begin(), step.end());
+			chain.push_back(Command(OpCode::STORE, const_for_step, node.tokens[0].line));
 
+			//Sets start value of variable
+			chain.push_back(Command(OpCode::LOAD, const_for_step, node.tokens[0].line));//right
+			chain.push_back(Command(OpCode::PUSH, 0, node.tokens[0].line));				//left
+			chain.push_back(Command(OpCode::LESS, 0, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_greater_start, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LOAD, const_for_end, node.tokens[0].line));
+			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA, label_for_check, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LABEL, label_for_greater_start, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LOAD, const_for_start, node.tokens[0].line));
 			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
 
-			//проверка
-			chain.push_back(Command(OpCode::LABEL, check_label));
-			chain.insert(chain.end(), end.begin(), end.end());
+			//Checking
+			chain.push_back(Command(OpCode::LABEL, label_for_check, node.tokens[0].line));
+
+			chain.push_back(Command(OpCode::LOAD, const_for_step, node.tokens[0].line));//right
+			chain.push_back(Command(OpCode::PUSH, 0, node.tokens[0].line));				//left
+			chain.push_back(Command(OpCode::LESS, 0, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_greater, node.tokens[0].line));
+			//---LESS
 			chain.push_back(Command(OpCode::LOAD, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::EQUAL, Value(), node.tokens[0].line));
+			chain.push_back(Command(OpCode::LOAD, const_for_start, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LESS, 0, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_body, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA, label_for_end, node.tokens[0].line));
+
+			//---GREATER
+			chain.push_back(Command(OpCode::LABEL, label_for_greater, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LOAD, variable, node.tokens[0].line));	//right
+			chain.push_back(Command(OpCode::LOAD, const_for_end, node.tokens[0].line));		//left
+			chain.push_back(Command(OpCode::GREATER, 0, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_body, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA, label_for_end, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LABEL, label_for_body, node.tokens[0].line));
 
 			std::vector<Command> for_chain;
 			for (CommandNode& child : node.children) {
 				auto childChain = BuildExecutionChain(child);
 				for_chain.insert(for_chain.end(), childChain.begin(), childChain.end());
 			}
-			chain.push_back(Command(OpCode::JMPA_IF, end_label, node.tokens[0].line));
 
 			for (int i = 0; i < for_chain.size(); i++)
 			{
@@ -177,12 +219,12 @@ namespace ELScript
 					if (c.operand.strVal == "break")
 					{
 						c.code = OpCode::JMPA;
-						c.operand = end_label; //Прыжок в конец на N, учитываем смещение i, так как оно в другом массиве!
+						c.operand = label_for_end; //Прыжок в конец на N, учитываем смещение i, так как оно в другом массиве!
 					}
 					if (c.operand.strVal == "continue")
 					{
 						c.code = OpCode::JMPA;
-						c.operand = add_label; //Прыжок вниз на N, так как нам надо увеличивать i
+						c.operand = label_for_add; //Прыжок вниз на N, так как нам надо увеличивать i
 					}
 				}
 			}
@@ -191,13 +233,13 @@ namespace ELScript
 			chain.insert(chain.end(), for_chain.begin(), for_chain.end());
 
 			//Увеличение переменной на шаг
-			chain.push_back(Command(OpCode::LABEL, add_label, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LABEL, label_for_add, node.tokens[0].line));
 			chain.push_back(Command(OpCode::LOAD, variable, node.tokens[0].line));
-			chain.insert(chain.end(), step.begin(), step.end());
+			chain.push_back(Command(OpCode::LOAD, const_for_step, node.tokens[0].line));
 			chain.push_back(Command(OpCode::ADD, Value(), node.tokens[0].line));
 			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPA, check_label, node.tokens[0].line));	//Прыгаем обратно
-			chain.push_back(Command(OpCode::LABEL, end_label, node.tokens[0].line));
+			chain.push_back(Command(OpCode::JMPA, label_for_check, node.tokens[0].line));	//Прыгаем обратно
+			chain.push_back(Command(OpCode::LABEL, label_for_end, node.tokens[0].line));
 		}
 
 		void Handler_print_value(CommandNode& node, std::vector<Command>& chain, int current_index)

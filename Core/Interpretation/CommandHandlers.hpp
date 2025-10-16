@@ -426,8 +426,8 @@ namespace ELScript
                 return;
             }
 
-            auto val1 = GetStackTop(chain);
-            auto val2 = GetStackTop(chain);
+            auto val1 = GetStackTop(chain); //left
+            auto val2 = GetStackTop(chain); //right
 
             if (val1.type != val2.type) {
                 MessageHandlerManager::RaiseError(Message(chain.id, command, chain.current_rip, MessageType::Error, "[VM] GREATER: different types of values."));
