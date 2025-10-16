@@ -144,7 +144,6 @@ namespace ELScript
 			std::string label_for_end = StringOperations::GenerateLabel("#for_end");
 			std::string label_for_body = StringOperations::GenerateLabel("#for_body");
 			std::string label_for_greater = StringOperations::GenerateLabel("#for_greater");
-			std::string label_for_greater_start = StringOperations::GenerateLabel("#for_greater_start");	//If step < 0 variable has end value
 			//Константы
 			std::string const_for_start = StringOperations::GenerateLabel("#const_for_start");
 			std::string const_for_end = StringOperations::GenerateLabel("#const_for_end");
@@ -170,14 +169,6 @@ namespace ELScript
 			chain.push_back(Command(OpCode::STORE, const_for_step, node.tokens[0].line));
 
 			//Sets start value of variable
-			chain.push_back(Command(OpCode::LOAD, const_for_step, node.tokens[0].line));//right
-			chain.push_back(Command(OpCode::PUSH, 0, node.tokens[0].line));				//left
-			chain.push_back(Command(OpCode::LESS, 0, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_greater_start, node.tokens[0].line));
-			chain.push_back(Command(OpCode::LOAD, const_for_end, node.tokens[0].line));
-			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::JMPA, label_for_check, node.tokens[0].line));
-			chain.push_back(Command(OpCode::LABEL, label_for_greater_start, node.tokens[0].line));
 			chain.push_back(Command(OpCode::LOAD, const_for_start, node.tokens[0].line));
 			chain.push_back(Command(OpCode::STORE, variable, node.tokens[0].line));
 
@@ -190,7 +181,7 @@ namespace ELScript
 			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_greater, node.tokens[0].line));
 			//---LESS
 			chain.push_back(Command(OpCode::LOAD, variable, node.tokens[0].line));
-			chain.push_back(Command(OpCode::LOAD, const_for_start, node.tokens[0].line));
+			chain.push_back(Command(OpCode::LOAD, const_for_end, node.tokens[0].line));
 			chain.push_back(Command(OpCode::LESS, 0, node.tokens[0].line));
 			chain.push_back(Command(OpCode::JMPA_IF_N, label_for_body, node.tokens[0].line));
 			chain.push_back(Command(OpCode::JMPA, label_for_end, node.tokens[0].line));
